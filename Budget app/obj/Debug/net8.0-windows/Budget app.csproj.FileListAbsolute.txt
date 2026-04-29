@@ -1,0 +1,23 @@
+C:\Users\Administrator\source\repos\Budget app\Budget app\bin\Debug\net8.0-windows\Budget app.exe
+C:\Users\Administrator\source\repos\Budget app\Budget app\bin\Debug\net8.0-windows\Budget app.deps.json
+C:\Users\Administrator\source\repos\Budget app\Budget app\bin\Debug\net8.0-windows\Budget app.runtimeconfig.json
+C:\Users\Administrator\source\repos\Budget app\Budget app\bin\Debug\net8.0-windows\Budget app.dll
+C:\Users\Administrator\source\repos\Budget app\Budget app\bin\Debug\net8.0-windows\Budget app.pdb
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\MainWindow.g.cs
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\App.g.cs
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app_MarkupCompile.cache
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\MainWindow.baml
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.g.resources
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.AssemblyInfoInputs.cache
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.AssemblyInfo.cs
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.dll
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\refint\Budget app.dll
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.pdb
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app.genruntimeconfig.cache
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\ref\Budget app.dll
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Resources\Styles.g.cs
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Views\Historyview.g.cs
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Views\Setupview.g.cs
+C:\Users\Administrator\source\repos\Budget app\Budget app\obj\Debug\net8.0-windows\Budget app_MarkupCompile.lref

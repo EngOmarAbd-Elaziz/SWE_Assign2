@@ -1,0 +1,22 @@
+﻿<Window x:Class="BudgetApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Budget App" Height="350" Width="400">
+
+    <Grid>
+        <StackPanel Margin="20">
+
+            <TextBox x:Name="AmountBox" Height="30"/>
+            <TextBox x:Name="CategoryBox" Margin="0,10,0,0" Height="30"/>
+
+            <Button Content="Add Expense"
+                    Margin="0,10,0,0"
+                    Click="AddExpense_Click"/>
+
+            <Button Content="Show Daily Limit"
+                    Margin="0,10,0,0"
+                    Click="ShowLimit_Click"/>
+
+        </StackPanel>
+    </Grid>
+</Window>
