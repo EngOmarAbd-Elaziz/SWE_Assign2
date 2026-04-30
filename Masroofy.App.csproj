@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WinForms" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="SWE_Assign2\**\*.cs" />
+    <None Remove="SWE_Assign2\**\*.xaml" />
+    <Page Remove="SWE_Assign2\**\*.xaml" />
+    <ApplicationDefinition Remove="SWE_Assign2\**\*.xaml" />
+    <EmbeddedResource Remove="SWE_Assign2\**\*" />
+    <Content Remove="SWE_Assign2\**\*" />
+  </ItemGroup>
+
+</Project>
