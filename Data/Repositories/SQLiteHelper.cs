@@ -159,6 +159,20 @@ public sealed class SQLiteHelper
         tx.Commit();
     }
 
+    public void UpdateAdminPassword(string adminPasswordHash)
+    {
+        using var connection = CreateConnection();
+        connection.Open();
+        using var tx = connection.BeginTransaction();
+        using var command = connection.CreateCommand();
+        command.Transaction = tx;
+        command.CommandText = "UPDATE Users SET AdminPasswordHash = $adminPasswordHash WHERE Role = 'Admin';";
+        command.Parameters.AddWithValue("$adminPasswordHash", adminPasswordHash);
+        command.ExecuteNonQuery();
+        InsertAuditLog("Admin password updated", tx);
+        tx.Commit();
+    }
+
     public BudgetCycle? GetActiveCycle(int userId)
     {
         using var connection = CreateConnection();

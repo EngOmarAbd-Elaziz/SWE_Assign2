@@ -34,7 +34,7 @@ public sealed class SettingsView : UserControl
         {
             Dock = DockStyle.Top, // تلتصق بالأعلى وتتمدد
             ColumnCount = 1,
-            RowCount = 5,
+            RowCount = 4,
             AutoSize = true,
             Padding = new Padding(50),
             BackColor = Color.Transparent
@@ -58,24 +58,25 @@ public sealed class SettingsView : UserControl
 
         var pinCard = CreateSettingsGroup("SECURITY & PRIVACY", "Change your primary access code for the application.", txtNewPin, btnChangePin);
 
-        // 3. كارت الـ Manager Mode
+        // 3. كارت تحديث كلمة مرور Admin
+        var txtAdminPass = CreateLargeTextBox("Enter New Admin Password");
+        var btnAdminPass = CreateLargeButton("UPDATE ADMIN PASSWORD", ColorPalette.WarningOrange);
+        btnAdminPass.Click += (_, _) => HandleAdminPasswordChange(txtAdminPass);
+
+        var adminPassCard = CreateSettingsGroup("ADMIN CREDENTIALS", "Update the administrator password for manager panel access.", txtAdminPass, btnAdminPass);
+
+        // 4. كارت الـ Manager Mode
         var txtManagerPin = CreateLargeTextBox("Enter Admin PIN to Unlock");
-        var btnEnableManager = CreateLargeButton("UNLOCK MANAGER MODE", ColorPalette.WarningOrange);
+        var btnEnableManager = CreateLargeButton("UNLOCK MANAGER MODE", ColorPalette.AccentGreen);
         btnEnableManager.Click += (_, _) => HandleManagerUnlock(txtManagerPin);
 
-        var managerCard = CreateSettingsGroup("ADMIN PRIVILEGES", "Unlock advanced editing features and history management.", txtManagerPin, btnEnableManager);
-
-        // 4. كارت المظهر والأنظمة
-        var btnToggleTheme = CreateLargeButton("SWITCH VISUAL THEME", Color.FromArgb(63, 63, 70));
-        btnToggleTheme.Click += (_, _) => _themeService.ToggleTheme(_hostForm);
-
-        var themeCard = CreateSettingsGroup("INTERFACE APPEARANCE", "Toggle between light and dark high-contrast themes.", null, btnToggleTheme);
+        var managerCard = CreateSettingsGroup("ADMIN PRIVILEGES", "Unlock advanced editing features and system administration.", txtManagerPin, btnEnableManager);
 
         // إضافة الكل للحاوية
         mainLayout.Controls.Add(lblHeader);
         mainLayout.Controls.Add(pinCard);
+        mainLayout.Controls.Add(adminPassCard);
         mainLayout.Controls.Add(managerCard);
-        mainLayout.Controls.Add(themeCard);
 
         this.Controls.Add(mainLayout);
     }
@@ -146,6 +147,25 @@ public sealed class SettingsView : UserControl
         _controller.ChangePin(txt.Text);
         txt.Clear();
         MessageBox.Show("Security PIN Updated!");
+    }
+
+    private void HandleAdminPasswordChange(TextBox txt)
+    {
+        if (string.IsNullOrWhiteSpace(txt.Text))
+        {
+            MessageBox.Show("Admin password cannot be empty.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (txt.Text.Length < 6)
+        {
+            MessageBox.Show("Admin password must be at least 6 characters.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        _controller.ChangeAdminPassword(txt.Text);
+        txt.Clear();
+        MessageBox.Show("Admin password updated successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void HandleManagerUnlock(TextBox txt)

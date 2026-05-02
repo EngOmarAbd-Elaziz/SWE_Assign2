@@ -2,11 +2,10 @@ using Masroofy.App.Assets;
 using Masroofy.App.Controllers;
 using Masroofy.App.Services;
 using LiveChartsCore;
-using LiveChartsCore.Measure;
-using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using SkiaSharp;
+using LiveChartsCore.SkiaSharpView.Painting;
 
 namespace Masroofy.App.Views.Components;
 
@@ -14,263 +13,265 @@ public sealed class AnalyticsView : UserControl
 {
     private readonly AppController _controller;
     private readonly DashboardView _dashboard;
-    private readonly CartesianChart _chart = new()
-    {
-        Dock = DockStyle.Fill,
-        Margin = new Padding(0, 20, 0, 20)
-    };
 
-    private readonly Label _lblVelocity = new() { AutoSize = true, Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.LightGray, Margin = new Padding(0, 10, 0, 0) };
-    private readonly Label _lblTopCategory = new() { AutoSize = true, Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.LightGray, Margin = new Padding(0, 10, 0, 0) };
-    private readonly Label _lblHealth = new() { AutoSize = true, Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.LightGray, Margin = new Padding(0, 10, 0, 10) };
-    private readonly Label _lblInsight = new() { AutoSize = true, Font = new Font("Segoe UI", 14, FontStyle.Regular), ForeColor = ColorPalette.AccentGreen, Margin = new Padding(0, 8, 0, 18) };
-    private readonly Panel _healthBarBackground = new() { BackColor = Color.FromArgb(45, 45, 45), Height = 22, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 20) };
-    private readonly Panel _healthBarFill = new() { BackColor = ColorPalette.SafeGreen, Height = 22, Width = 0 };
+    // Charts
+    private readonly CartesianChart _barChart = new() { Dock = DockStyle.Fill };
+    private readonly PieChart _pieChart = new() { Dock = DockStyle.Fill };
+
+    // Summary Labels
+    private readonly Label _lblVelocity = new() { AutoSize = false, Width = 750, Height = 35, ForeColor = Color.White };
+    private readonly Label _lblTopCategory = new() { AutoSize = false, Width = 750, Height = 35, ForeColor = Color.White };
+    private readonly Label _lblHealth = new() { AutoSize = false, Width = 750, Height = 35, ForeColor = Color.White };
+    private readonly Label _lblInsight = new() { AutoSize = false, Width = 750, Height = 60, ForeColor = ColorPalette.AccentGreen };
+
+    // Side Cards Labels (Dynamic)
+    private readonly Label _lblPatternDesc = new() { ForeColor = Color.LightGray, Font = new Font("Segoe UI", 9), Dock = DockStyle.Fill };
+    private readonly Label _lblHealthDesc = new() { ForeColor = Color.LightGray, Font = new Font("Segoe UI", 9), Dock = DockStyle.Fill };
+
+    // Health Bar
+    private readonly Panel _healthBarBackground = new() { BackColor = Color.FromArgb(45, 45, 45), Height = 18, Width = 650 };
+    private readonly Panel _healthBarFill = new() { BackColor = ColorPalette.SafeGreen, Width = 0, Height = 18 };
 
     public AnalyticsView(AppController controller, DashboardView dashboard)
     {
         _controller = controller;
         _dashboard = dashboard;
-        Dock = DockStyle.Fill;
-        BackColor = ColorPalette.DarkBackground;
-        AutoScroll = true;
+        this.Dock = DockStyle.Fill;
+        this.BackColor = ColorPalette.DarkBackground;
 
-        var layout = new TableLayoutPanel
+        var mainLayout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 8,
-            Padding = new Padding(40),
-            AutoSize = false,
-            RowStyles =
-            {
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.AutoSize),
-                new RowStyle(SizeType.Percent, 100F)
-            }
+            ColumnCount = 2,
+            RowCount = 3,
+            Padding = new Padding(20)
         };
 
-        layout.Controls.Add(new Label
+        mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+        mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70F));
+        mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));  // Header
+        mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 260F)); // Summary & Insights
+        mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // Charts
+
+        // 1. Header
+        var header = new Label
         {
-            Text = "Analytics & Insights",
-            AutoSize = true,
-            Font = new Font("Segoe UI", 28, FontStyle.Bold),
+            Text = "Financial Intelligence",
+            Font = new Font("Segoe UI", 24, FontStyle.Bold),
             ForeColor = ColorPalette.AccentGreen,
-            Margin = new Padding(0, 0, 0, 20),
-            Dock = DockStyle.Fill
-        }, 0, 0);
-
-        var statsPanel = new TableLayoutPanel
-        {
             Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 4,
-            AutoSize = true
+            TextAlign = ContentAlignment.MiddleLeft
         };
-        statsPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        statsPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        statsPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        statsPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        statsPanel.Controls.Add(_lblVelocity, 0, 0);
-        statsPanel.Controls.Add(_lblTopCategory, 0, 1);
-        statsPanel.Controls.Add(_lblHealth, 0, 2);
-        statsPanel.Controls.Add(_lblInsight, 0, 3);
+        mainLayout.Controls.Add(header, 0, 0);
+        mainLayout.SetColumnSpan(header, 2);
 
-        layout.Controls.Add(statsPanel, 0, 1);
-        layout.Controls.Add(CreateAnalyticsCard("Spending Velocity", "If you spend 120 EGP/day while your planned pace is 100 EGP/day, you are approaching warning territory.", "Actual: 120/day", "Planned: 100/day", "Adjust your pace."), 0, 2);
-        layout.Controls.Add(CreateAnalyticsCard("Budget Health", "Your current budget usage is the strongest signal for whether you can safely keep spending.", "Usage: 65%", "Safe Threshold: 70%", "Keep it green."), 0, 3);
-        layout.Controls.Add(CreateAnalyticsCard("Fast Action", "When your spending velocity exceeds the plan, reduce non-essential categories first.", "Save more by reviewing categories.", "Tip: Save now", "Stay on track"), 0, 4);
+        // 2. Left Panel (Dynamic Cards)
+        var leftPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false };
+        leftPanel.Controls.Add(CreateDynamicCard("Patterns", _lblPatternDesc));
+        leftPanel.Controls.Add(CreateDynamicCard("Health Status", _lblHealthDesc));
+        mainLayout.Controls.Add(leftPanel, 0, 1);
 
-        layout.Controls.Add(new Label
+        // 3. Right Panel (Summary & Progress Bar)
+        var rightSummaryPanel = new Panel { Dock = DockStyle.Fill };
+        var summaryCard = new Panel
         {
-            Text = "Detailed Chart",
-            AutoSize = true,
-            Font = new Font("Segoe UI", 18, FontStyle.Bold),
-            ForeColor = Color.White,
-            Margin = new Padding(0, 20, 0, 8),
-            Dock = DockStyle.Fill
-        }, 0, 5);
+            Location = new Point(0, 0),
+            Size = new Size(780, 190),
+            BackColor = ColorPalette.DarkSurface,
+            Padding = new Padding(20)
+        };
+        UiStyleService.ApplyRoundedCorners(summaryCard, 15);
 
+        int startY = 15;
+        foreach (var lbl in new[] { _lblVelocity, _lblTopCategory, _lblHealth, _lblInsight })
+        {
+            lbl.Font = new Font("Segoe UI", 12, FontStyle.Bold);
+            lbl.Location = new Point(25, startY);
+            summaryCard.Controls.Add(lbl);
+            startY += 40;
+        }
+        _lblInsight.Font = new Font("Segoe UI", 10, FontStyle.Italic);
+
+        _healthBarBackground.Location = new Point(0, 205);
         _healthBarBackground.Controls.Add(_healthBarFill);
-        layout.Controls.Add(_healthBarBackground, 0, 6);
-        layout.Controls.Add(_chart, 0, 7);
+        rightSummaryPanel.Controls.Add(summaryCard);
+        rightSummaryPanel.Controls.Add(_healthBarBackground);
+        mainLayout.Controls.Add(rightSummaryPanel, 1, 1);
 
-        Controls.Add(layout);
+        // 4. Charts Container (Pie + Bar)
+        var chartsContainer = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2 };
+        chartsContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+        chartsContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
 
-        Reload();
+        chartsContainer.Controls.Add(_pieChart, 0, 0);
+        chartsContainer.Controls.Add(_barChart, 1, 0);
+
+        mainLayout.Controls.Add(chartsContainer, 0, 2);
+        mainLayout.SetColumnSpan(chartsContainer, 2);
+
+        this.Controls.Add(mainLayout);
+        this.Load += (s, e) => Reload();
     }
 
     public void Reload()
     {
         if (_controller.CurrentCycle == null)
         {
-            _lblVelocity.Text = "No active budget cycle available.";
-            _lblTopCategory.Text = "Top category unavailable.";
-            _lblHealth.Text = "Financial Health: N/A";
-            _healthBarFill.Width = 0;
-            _chart.Series = Array.Empty<ISeries>();
+            ResetToDefault();
             return;
         }
 
         var expenses = _controller.GetExpenses();
-        var totalAllowance = _controller.CurrentCycle.TotalAllowance;
-        var totalSpent = expenses.Sum(x => x.Amount);
+        if (expenses == null || !expenses.Any())
+        {
+            ResetToDefault();
+            return;
+        }
+
+        double totalAllowance = (double)_controller.CurrentCycle.TotalAllowance;
+        double totalSpent = (double)expenses.Sum(x => x.Amount);
+
+        // --- الحسابات المالية ---
         var daysPassed = Math.Max(1, (DateTime.Today - _controller.CurrentCycle.StartDate.Date).Days + 1);
-        var totalDays = Math.Max(1, (_controller.CurrentCycle.EndDate.Date - _controller.CurrentCycle.StartDate.Date).Days + 1);
+        double actualVelocity = totalSpent / daysPassed;
+        double plannedVelocity = totalAllowance / Math.Max(1, (_controller.CurrentCycle.EndDate.Date - _controller.CurrentCycle.StartDate.Date).Days + 1);
 
-        var actualVelocity = totalSpent / daysPassed;
-        var plannedVelocity = totalAllowance / totalDays;
-        var velocityRatio = plannedVelocity > 0 ? actualVelocity / plannedVelocity : 0m;
-
-        _lblVelocity.Text = $"Spending Velocity: {actualVelocity:C2}/day vs planned {plannedVelocity:C2}/day ({velocityRatio:P0})";
+        _lblVelocity.Text = $"Velocity: {actualVelocity:C}/day vs Planned {plannedVelocity:C}/day";
 
         var categoryTotals = expenses.GroupBy(x => x.Category)
-            .Select(g => new { Category = g.Key, Total = g.Sum(x => x.Amount) })
-            .OrderByDescending(x => x.Total)
+            .Select(g => new { Category = g.Key, Total = (double)g.Sum(x => x.Amount) })
             .ToList();
 
-        var top = categoryTotals.FirstOrDefault();
-        if (top == null)
+        var topCat = categoryTotals.OrderByDescending(x => x.Total).First();
+        _lblTopCategory.Text = $"Top Spending: {topCat.Category} ({(totalSpent > 0 ? (topCat.Total / totalSpent) : 0):P0})";
+
+        double usedPercent = totalAllowance <= 0 ? 0 : (totalSpent / totalAllowance);
+        _lblHealth.Text = $"Budget Health: {usedPercent:P0} consumed";
+
+        // --- تحديث الكروت الجانبية والـ Insights ---
+        UpdateDynamicAnalytics(actualVelocity, plannedVelocity, topCat.Category, usedPercent, categoryTotals.Count);
+
+        // --- تحديث الـ Health Bar ---
+        _healthBarFill.Width = (int)(_healthBarBackground.Width * Math.Min(1.0, usedPercent));
+        _healthBarFill.BackColor = usedPercent > 0.9 ? Color.Red : ColorPalette.AccentGreen;
+
+        // --- تحديث الـ PieChart (توزيع النسب) ---
+        double totalForPercentage = categoryTotals.Sum(x => x.Total);
+        _pieChart.Series = categoryTotals.Select(c =>
         {
-            _lblTopCategory.Text = "Top Category: No expenses yet.";
+            var percentage = totalForPercentage > 0 ? (c.Total / totalForPercentage * 100) : 0;
+            return new PieSeries<double>
+            {
+                Values = new[] { c.Total },
+                Name = c.Category,
+                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsSize = 14,
+                DataLabelsFormatter = (chartPoint) => percentage.ToString("N1") + "%"
+            };
+        }).ToArray();
+
+        // --- تحديث الـ BarChart (النمو السعري) ---
+        _barChart.Series = new ISeries[] {
+            new ColumnSeries<double> {
+                Values = categoryTotals.Select(x => x.Total).ToArray(),
+                Name = "Expenses",
+                MaxBarWidth = 45,
+                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top,
+                DataLabelsPaint = new SolidColorPaint(SKColors.White)
+            }
+        };
+
+        _barChart.XAxes = new Axis[] {
+            new Axis {
+                Labels = categoryTotals.Select(x => x.Category).ToArray(),
+                LabelsPaint = new SolidColorPaint(SKColors.Gray),
+                TextSize = 12
+            }
+        };
+
+        _barChart.YAxes = new Axis[] {
+            new Axis {
+                MinLimit = 0,
+                LabelsPaint = new SolidColorPaint(SKColors.Gray),
+                TextSize = 11
+            }
+        };
+
+        // Force charts to redraw immediately
+        _pieChart.Invalidate();
+        _barChart.Invalidate();
+    }
+
+    private void UpdateDynamicAnalytics(double actual, double planned, string topCat, double health, int catCount)
+    {
+        // 1. تحديث كارت الـ Patterns
+        if (actual > planned)
+        {
+            _lblPatternDesc.Text = $"Warning: Spending {actual - planned:C} more than planned daily limit.";
+            _lblPatternDesc.ForeColor = Color.Orange;
         }
         else
         {
-            var percent = totalSpent <= 0 ? 0 : top.Total / totalSpent;
-            _lblTopCategory.Text = $"Top Category: {top.Category} ({percent:P0})";
+            _lblPatternDesc.Text = "Healthy: Spending is currently below the daily planned velocity.";
+            _lblPatternDesc.ForeColor = Color.LightGreen;
         }
 
-        var usedPercent = totalAllowance <= 0 ? 0 : Math.Min(1, totalSpent / totalAllowance);
-        _lblHealth.Text = $"Financial Health: {Math.Round(usedPercent * 100, 0)}% of budget used";
-        _healthBarFill.Width = (int)(_healthBarBackground.Width * usedPercent);
-        _healthBarFill.BackColor = usedPercent <= 0.7m ? ColorPalette.SafeGreen : usedPercent <= 0.9m ? ColorPalette.WarningOrange : ColorPalette.OverspentRed;
-
-        _chart.Series = categoryTotals.Select(item =>
+        // 2. تحديث كارت الـ Health Status
+        if (health > 0.8)
         {
-            var color = SKColor.Parse(item.Category == "Other" ? "#8BC34A" : "#50C878");
-            return new ColumnSeries<double>
-            {
-                Name = item.Category,
-                Values = new[] { (double)item.Total },
-                Fill = new SolidColorPaint(color.WithAlpha(180)),
-                Stroke = new SolidColorPaint(color) { StrokeThickness = 2 },
-                DataLabelsPaint = new SolidColorPaint(SKColors.WhiteSmoke),
-                DataLabelsPosition = DataLabelsPosition.Top,
-                Padding = 8
-            };
-        }).Cast<ISeries>().ToArray();
-
-        _chart.XAxes = new Axis[]
+            _lblHealthDesc.Text = $"Critical: {health:P0} of budget is gone. Stop non-essential spending.";
+            _lblHealthDesc.ForeColor = Color.IndianRed;
+        }
+        else
         {
-            new() { Labels = categoryTotals.Select(x => x.Category).ToArray(), LabelsRotation = 0, TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.LightGray) }
-        };
+            _lblHealthDesc.Text = $"Stable: You still have {1.0 - health:P0} of your budget available.";
+            _lblHealthDesc.ForeColor = Color.LightGray;
+        }
 
-        _chart.YAxes = new Axis[]
+        // 3. تحديث الـ Insights الرئيسية
+        if (health > 1.0)
         {
-            new() { Name = "EGP", Labeler = value => value.ToString("N0"), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.LightGray) }
-        };
-
-        _lblInsight.Text = GetInsightMessage(usedPercent, velocityRatio);
-
-        _chart.LegendPosition = LegendPosition.Bottom;
-        _chart.LegendTextPaint = new SolidColorPaint(SKColors.WhiteSmoke);
+            _lblInsight.Text = $"Insight: Budget Exceeded! Most funds went to '{topCat}'. Analyze your history for leaks.";
+            _lblInsight.ForeColor = Color.IndianRed;
+        }
+        else if (actual > planned * 1.5)
+        {
+            _lblInsight.Text = "Insight: Aggressive spending detected. You are 50% faster than your target speed.";
+            _lblInsight.ForeColor = Color.Orange;
+        }
+        else
+        {
+            _lblInsight.Text = "Insight: All systems clear. You are managing your budget effectively.";
+            _lblInsight.ForeColor = ColorPalette.AccentGreen;
+        }
     }
 
-    private string GetInsightMessage(decimal usedPercent, decimal velocityRatio)
+    private void ResetToDefault()
     {
-        if (usedPercent >= 0.9m)
-            return "Insight: Budget is critically consumed. Reduce discretionary spending immediately.";
+        _lblVelocity.Text = "Velocity: $0.00/day";
+        _lblTopCategory.Text = "Top Spending: None";
+        _lblHealth.Text = "Budget Health: 0% used";
+        _lblInsight.Text = "Insight: Add expenses to start financial analysis.";
+        _lblInsight.ForeColor = Color.Gray;
 
-        if (velocityRatio > 1m)
-            return "Insight: You are spending faster than usual. Rebalance priorities and save cash.";
+        _lblPatternDesc.Text = "Tracking spending velocity vs goals.";
+        _lblPatternDesc.ForeColor = Color.LightGray;
+        _lblHealthDesc.Text = "Real-time budget exhaustion limits.";
+        _lblHealthDesc.ForeColor = Color.LightGray;
 
-        if (usedPercent >= 0.7m)
-            return "Insight: Your budget is in warning territory. Review non-essential categories.";
-
-        return "Insight: Healthy pace. Keep your spending aligned with your budget plan.";
+        _healthBarFill.Width = 0;
+        _barChart.Series = Array.Empty<ISeries>();
+        _pieChart.Series = Array.Empty<ISeries>();
     }
 
-    private Control CreateAnalyticsCard(string title, string description, string statA, string statB, string callout)
+    private Control CreateDynamicCard(string title, Label contentLabel)
     {
-        var card = new Panel
-        {
-            Dock = DockStyle.Top,
-            AutoSize = true,
-            BackColor = ColorPalette.DarkSurface,
-            Margin = new Padding(0, 0, 0, 20),
-            Padding = new Padding(30)
-        };
-        UiStyleService.ApplyRoundedCorners(card, 20);
-
-        var contentLayout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            AutoSize = true
-        };
-        contentLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-
-        var header = new Label
-        {
-            Text = title,
-            Font = new Font("Segoe UI", 20, FontStyle.Bold),
-            ForeColor = Color.White,
-            AutoSize = true,
-            Margin = new Padding(0, 0, 0, 10)
-        };
-
-        var descriptionLabel = new Label
-        {
-            Text = description,
-            Font = new Font("Segoe UI", 12, FontStyle.Regular),
-            ForeColor = Color.LightGray,
-            MaximumSize = new Size(1000, 0),
-            AutoSize = true,
-            Margin = new Padding(0, 0, 0, 20)
-        };
-
-        var detailsLabel = new Label
-        {
-            Text = statA,
-            Font = new Font("Segoe UI", 14, FontStyle.Bold),
-            ForeColor = ColorPalette.AccentGreen,
-            AutoSize = true,
-            Margin = new Padding(0, 0, 0, 10)
-        };
-
-        var subLabel = new Label
-        {
-            Text = statB,
-            Font = new Font("Segoe UI", 12, FontStyle.Regular),
-            ForeColor = Color.White,
-            AutoSize = true,
-            Margin = new Padding(0, 0, 0, 15)
-        };
-
-        var badge = new Label
-        {
-            Text = callout,
-            Font = new Font("Segoe UI", 12, FontStyle.Bold),
-            ForeColor = Color.White,
-            BackColor = Color.FromArgb(40, 40, 43),
-            AutoSize = true,
-            Padding = new Padding(12, 8, 12, 8),
-            Margin = new Padding(0, 0, 0, 0)
-        };
-
-        contentLayout.Controls.Add(header);
-        contentLayout.Controls.Add(descriptionLabel);
-        contentLayout.Controls.Add(detailsLabel);
-        contentLayout.Controls.Add(subLabel);
-        contentLayout.Controls.Add(badge);
-
-        card.Controls.Add(contentLayout);
+        var card = new Panel { Width = 280, Height = 110, BackColor = ColorPalette.DarkSurface, Margin = new Padding(0, 0, 0, 10), Padding = new Padding(15) };
+        UiStyleService.ApplyRoundedCorners(card, 12);
+        var t = new Label { Text = title, Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.White, Dock = DockStyle.Top, Height = 25 };
+        card.Controls.Add(contentLabel);
+        card.Controls.Add(t);
         return card;
     }
 }
-

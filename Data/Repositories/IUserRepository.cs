@@ -10,4 +10,5 @@ public interface IUserRepository
     User? GetDefaultUser();
     void CreateUser(string name, string pinHash, string role);
     void UpdateUserPinHash(int userId, string pinHash);
+    void UpdateAdminPassword(string adminPasswordHash);
 }

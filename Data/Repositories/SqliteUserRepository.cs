@@ -22,4 +22,6 @@ public sealed class SqliteUserRepository : IUserRepository
     public void CreateUser(string name, string pinHash, string role) => _db.CreateUser(name, pinHash, role);
 
     public void UpdateUserPinHash(int userId, string pinHash) => _db.UpdateUserPinHash(userId, pinHash);
+
+    public void UpdateAdminPassword(string adminPasswordHash) => _db.UpdateAdminPassword(adminPasswordHash);
 }

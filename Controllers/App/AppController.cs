@@ -66,6 +66,27 @@ public sealed class AppController
         _audits.Log(_user.Id, "Security: PIN has been changed.");
     }
 
+    public void ChangeAdminPassword(string newPassword)
+    {
+        // Assuming admin password is stored separately, for now use a simple hash
+        // In a real app, this would be stored securely
+        var adminHash = _security.HashPinSha256(newPassword);
+        _users.UpdateAdminPassword(adminHash); // Assuming this method exists or add it
+        _audits.Log(_user.Id, "Admin password updated.");
+    }
+
+    public void CreateNewBudgetCycle(decimal initialBalance, DateTime cycleStartDate)
+    {
+        // Assume cycle duration is 30 days for simplicity
+        var endDate = cycleStartDate.AddDays(30);
+        CreateBudgetCycle(initialBalance, cycleStartDate, endDate);
+    }
+
+    public void LogAction(string message)
+    {
+        _audits.Log(_user.Id, message);
+    }
+
     public bool VerifyCurrentPin(string pin)
     {
         if (string.IsNullOrWhiteSpace(pin)) return false;

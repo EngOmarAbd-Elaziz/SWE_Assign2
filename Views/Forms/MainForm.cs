@@ -72,7 +72,7 @@ public sealed class MainForm : Form
 
         var lblBrand = new Label
         {
-            Text = "GLOW LUX", // اسم البراند الخاص بك
+            Text = "Masroofy", // اسم البراند الخاص بك
             Dock = DockStyle.Top,
             Height = 80,
             TextAlign = ContentAlignment.MiddleCenter,

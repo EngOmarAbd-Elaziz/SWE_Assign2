@@ -7,7 +7,8 @@ public static class DatabaseSchema
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             Name TEXT NOT NULL UNIQUE,
             PinHash TEXT NOT NULL,
-            Role TEXT NOT NULL
+            Role TEXT NOT NULL,
+            AdminPasswordHash TEXT
         );
         """;
 

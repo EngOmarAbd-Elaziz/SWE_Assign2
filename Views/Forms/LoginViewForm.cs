@@ -3,6 +3,7 @@ using Masroofy.App.Models;
 using Masroofy.App.Services;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Masroofy.App.Views.Forms;
 
@@ -24,7 +25,8 @@ public sealed class LoginViewForm : Form
         ForeColor = Color.Tomato,
         Margin = new Padding(0, 10, 0, 0),
         Font = new Font("Segoe UI", 10, FontStyle.Bold),
-        TextAlign = ContentAlignment.MiddleCenter
+        TextAlign = ContentAlignment.MiddleCenter,
+        Text = "Enter your 4-digit PIN"
     };
 
     private readonly FlowLayoutPanel _pinDots = new()
@@ -38,25 +40,26 @@ public sealed class LoginViewForm : Form
 
     private readonly string[] _pinDigits = ["", "", "", ""];
     private int _pinPos;
+    private readonly System.Windows.Forms.Timer _shakeTimer = new() { Interval = 16 };
+    private int _shakeStep;
+    private int _originalLeft;
+
     public User? AuthenticatedUser { get; private set; }
 
     public LoginViewForm(IAuthService auth, IReadOnlyList<string> users)
     {
         _auth = auth;
 
-        // إعدادات النافذة الرئيسية (ATM Style)
         Text = "Masroofy - Secure Access";
         BackColor = ColorPalette.DarkBackground;
         ForeColor = ColorPalette.DarkText;
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.None;
 
-        // زيادة الحجم لضمان ظهور كل شيء بوضوح
         int formWidth = 450;
         int formHeight = 720;
         ClientSize = new Size(formWidth, formHeight);
 
-        // حواف دائرية للفورم نفسه
         Region = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(0, 0, formWidth, formHeight, 40, 40));
 
         foreach (var user in users) _cmbUsers.Items.Add(user);
@@ -65,22 +68,6 @@ public sealed class LoginViewForm : Form
 
         BuildPinDots();
         var keypad = BuildKeypad();
-
-        var btnLogin = new Button
-        {
-            Text = "UNLOCK SYSTEM",
-            Width = 360,
-            Height = 55,
-            BackColor = ColorPalette.AccentGreen,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI Semibold", 13),
-            Cursor = Cursors.Hand,
-            Margin = new Padding(0, 20, 0, 0)
-        };
-        btnLogin.FlatAppearance.BorderSize = 0;
-        UiStyleService.ApplyRoundedCorners(btnLogin, 15);
-
-        btnLogin.Click += (_, _) => AttemptLogin();
 
         var layout = new FlowLayoutPanel
         {
@@ -92,7 +79,7 @@ public sealed class LoginViewForm : Form
 
         var lblBrand = new Label
         {
-            Text = "LUX GLOW",
+            Text = "Masroofy",
             Font = new Font("Segoe UI", 26, FontStyle.Bold),
             ForeColor = ColorPalette.AccentGreen,
             AutoSize = true,
@@ -100,8 +87,10 @@ public sealed class LoginViewForm : Form
         };
 
         _cmbUsers.Width = 360;
-        layout.Controls.AddRange([lblBrand, _cmbUsers, _pinDots, keypad, btnLogin, _lblStatus]);
+        layout.Controls.AddRange([lblBrand, _cmbUsers, _pinDots, keypad, _lblStatus]);
         Controls.Add(layout);
+
+        _shakeTimer.Tick += ShakeTimer_Tick;
     }
 
     private void BuildPinDots()
@@ -154,7 +143,6 @@ public sealed class LoginViewForm : Form
             btn.FlatAppearance.BorderSize = 0;
             btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(55, 55, 60);
 
-            // جعل الأزرار دائرية تماماً
             UiStyleService.ApplyRoundedCorners(btn, 42);
 
             btn.Click += (_, _) => OnKey(key);
@@ -209,6 +197,8 @@ public sealed class LoginViewForm : Form
         else
         {
             _lblStatus.Text = "INVALID PIN - ACCESS DENIED";
+            _lblStatus.ForeColor = Color.Tomato;
+            ShakeWindow();
             ClearPin();
         }
     }
@@ -218,6 +208,37 @@ public sealed class LoginViewForm : Form
         for (var i = 0; i < _pinDigits.Length; i++) _pinDigits[i] = "";
         _pinPos = 0;
         RenderDots();
+    }
+
+    private void ShakeWindow()
+    {
+        if (_shakeTimer.Enabled) return;
+        _originalLeft = this.Left;
+        _shakeStep = 0;
+        _shakeTimer.Start();
+    }
+
+    private void ShakeTimer_Tick(object? sender, EventArgs e)
+    {
+        _shakeStep++;
+        var offset = _shakeStep switch
+        {
+            1 => -12,
+            2 => 12,
+            3 => -8,
+            4 => 8,
+            5 => -4,
+            6 => 4,
+            _ => 0
+        };
+
+        this.Left = _originalLeft + offset;
+
+        if (_shakeStep >= 6)
+        {
+            _shakeTimer.Stop();
+            this.Left = _originalLeft;
+        }
     }
 }
 
