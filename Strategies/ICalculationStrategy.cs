@@ -3,26 +3,24 @@ using Masroofy.App.Models;
 namespace Masroofy.App.Strategies;
 
 /// <summary>
-/// واجهة خاصة باستراتيجيات حساب الحد الآمن للمصروف اليومي.
+/// Defines a strategy for calculating a safe daily spending limit.
 /// 
-/// تستخدم الـ Strategy Pattern للسماح بتغيير طريقة الحساب
-/// بدون تعديل الكود الأساسي داخل BudgetService.
+/// This interface is used with the Strategy Pattern to allow
+/// different budgeting behaviors without modifying the core service logic.
 /// </summary>
 public interface ICalculationStrategy
 {
     /// <summary>
-    /// حساب الحد الآمن اليومي للإنفاق.
+    /// Calculates the safe daily spending limit based on the current budget cycle.
     /// </summary>
     /// <param name="cycle">
-    /// دورة الميزانية الحالية التي تحتوي على الرصيد المتبقي.
+    /// The current budget cycle containing remaining balance and limits.
     /// </param>
-    /// 
     /// <param name="remainingDays">
-    /// عدد الأيام المتبقية في دورة الميزانية.
+    /// Number of days left in the budget cycle.
     /// </param>
-    /// 
     /// <returns>
-    /// قيمة الحد الآمن اليومي الذي يمكن للمستخدم صرفه.
+    /// The calculated safe daily spending amount.
     /// </returns>
     decimal CalculateSafeLimit(
         BudgetCycle cycle,
