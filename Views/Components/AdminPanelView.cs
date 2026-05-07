@@ -4,18 +4,29 @@ using Masroofy.App.Services;
 
 namespace Masroofy.App.Views.Components;
 
+/// <summary>
+/// A UserControl that renders the admin panel, providing system-level controls including
+/// category management, financial debt settlement, database backup, budget cycle reset,
+/// and a live audit log viewer.
+/// </summary>
 public sealed class AdminPanelView : UserControl
 {
     private readonly AppController _controller;
     private readonly DashboardView _dashboard;
     private readonly Form? _hostForm;
 
-    // عناصر الإدخال
     private readonly ListBox _logs = new() { Dock = DockStyle.Fill, BackColor = Color.FromArgb(20, 20, 20), ForeColor = Color.LightGray, Font = new Font("Consolas", 10F), BorderStyle = BorderStyle.None };
     private readonly TextBox _txtCategory = new() { Width = 300, Height = 45, PlaceholderText = "New Category Name...", Font = new Font("Segoe UI", 12F) };
     private readonly ComboBox _comboDeleteCategory = new() { Width = 300, Height = 45, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 12F) };
     private readonly NumericUpDown _numSettle = new() { Width = 200, Minimum = 0, Maximum = 1000000, Font = new Font("Segoe UI", 14F, FontStyle.Bold) };
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="AdminPanelView"/>, builds the full admin layout,
+    /// populates the category list, and loads the initial audit log entries.
+    /// </summary>
+    /// <param name="controller">The application controller used to execute admin operations.</param>
+    /// <param name="dashboard">The dashboard view used to sync and refresh data after admin actions.</param>
+    /// <param name="hostForm">The optional parent form used to center modal dialogs; may be null.</param>
     public AdminPanelView(AppController controller, DashboardView dashboard, Form? hostForm = null)
     {
         _controller = controller;
@@ -31,6 +42,11 @@ public sealed class AdminPanelView : UserControl
         LoadLogs();
     }
 
+    /// <summary>
+    /// Builds the full two-column admin layout. The left column contains cards for category
+    /// management, financial settlement, database backup, and cycle reset. The right column
+    /// displays the scrollable audit log list.
+    /// </summary>
     private void InitializeAdminLayout()
     {
         var mainGrid = new TableLayoutPanel
@@ -44,7 +60,6 @@ public sealed class AdminPanelView : UserControl
         mainGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
         mainGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
 
-        // --- LEFT PANEL: ADMIN CONTROLS ---
         var controlPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -315,7 +330,7 @@ public sealed class AdminPanelView : UserControl
         resetCard.Controls.Add(resetDesc);
         controlPanel.Controls.Add(resetCard);
 
-        // --- RIGHT PANEL: AUDIT LOGS ---
+        // RIGHT PANEL: AUDIT LOGS
         var logContainer = new Panel
         {
             Dock = DockStyle.Fill,
@@ -358,6 +373,12 @@ public sealed class AdminPanelView : UserControl
         this.Controls.Add(mainGrid);
     }
 
+    /// <summary>
+    /// Clears the category input field, refreshes the category dropdown and dashboard data,
+    /// reloads the audit log, and shows a confirmation message box with the given text.
+    /// Called after any admin action that modifies application state.
+    /// </summary>
+    /// <param name="message">The confirmation message to display in the notification dialog.</param>
     private void FinishUpdate(string message)
     {
         _txtCategory.Clear();
@@ -368,19 +389,32 @@ public sealed class AdminPanelView : UserControl
         MessageBox.Show(message, "Admin System", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
+    /// <summary>
+    /// Clears and repopulates the delete category combo box with the current list
+    /// of categories from the controller.
+    /// </summary>
     private void RefreshCategoryList()
     {
         _comboDeleteCategory.Items.Clear();
         foreach (var cat in _controller.Categories) _comboDeleteCategory.Items.Add(cat);
     }
 
+    /// <summary>
+    /// Clears and repopulates the audit log list box with the latest entries from the controller,
+    /// prefixing each entry with the current time.
+    /// </summary>
     private void LoadLogs()
     {
         _logs.Items.Clear();
-        var auditItems = _controller.GetAuditLogs(); // تأكد أن الميثود ترجع List<string>
+        var auditItems = _controller.GetAuditLogs();
         foreach (var log in auditItems) _logs.Items.Add($"[{DateTime.Now:HH:mm}] {log}");
     }
 
+    /// <summary>
+    /// Opens a modal dialog that allows the admin to configure and confirm a full budget cycle reset.
+    /// The dialog collects a new initial balance and start date, then prompts for a final confirmation
+    /// before permanently deleting all transaction data and creating a new cycle.
+    /// </summary>
     private void ShowResetCycleDialog()
     {
         var form = new Form
@@ -495,18 +529,18 @@ public sealed class AdminPanelView : UserControl
         form.ShowDialog(_hostForm);
     }
 
+    /// <summary>
+    /// Executes the full cycle reset sequence: clears all existing expenses, creates a new
+    /// budget cycle with the given balance and start date, writes an audit log entry describing
+    /// the reset, and triggers a dashboard refresh.
+    /// </summary>
+    /// <param name="initialBalance">The opening balance for the new budget cycle.</param>
+    /// <param name="cycleStartDate">The start date for the new budget cycle.</param>
     private void ResetCycle(decimal initialBalance, DateTime cycleStartDate)
     {
-        // 1. Clear all transactions (TRUNCATE equivalent)
         _controller.ClearAllExpenses();
-
-        // 2. Reset the budget cycle with new values
         _controller.CreateNewBudgetCycle(initialBalance, cycleStartDate);
-
-        // 3. Update audit log
         _controller.LogAction($"System Reset: New cycle started with initial balance {initialBalance:C2} from {cycleStartDate:yyyy-MM-dd}");
-
-        // 4. Refresh dashboard
         _dashboard.RefreshData();
     }
 }
