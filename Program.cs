@@ -7,8 +7,18 @@ using Masroofy.App.Views.Forms;
 
 namespace Masroofy.App;
 
+/// <summary>
+/// Application entry point for Masroofy system.
+/// Responsible for initializing dependencies, handling first run setup,
+/// authentication flow, and launching the main application window.
+/// </summary>
 internal static class Program
 {
+    /// <summary>
+    /// Main entry method of the application.
+    /// Initializes database, composition root, setup flow, login flow,
+    /// and finally starts the main UI with an authenticated controller.
+    /// </summary>
     [STAThread]
     private static void Main()
     {
@@ -16,6 +26,8 @@ internal static class Program
 
         var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "masroofy.db");
         var composition = new AppCompositionRoot(dbPath);
+
+        // First run setup (database initialization / user setup)
         if (composition.Setup.IsFirstRun())
         {
             using var setup = new SetupViewForm(composition.Setup);
@@ -25,13 +37,17 @@ internal static class Program
             }
         }
 
+        // Load existing users for authentication
         var users = composition.UserRepository.GetUsers().Select(x => x.Name).ToList();
+
+        // Login screen
         using var login = new LoginViewForm(composition.Auth, users);
         if (login.ShowDialog() != DialogResult.OK || login.AuthenticatedUser == null)
         {
             return;
         }
 
+        // Build application controller with all dependencies (DI composition root)
         var controller = new AppController(
             composition.InfrastructureRepository,
             composition.UserRepository,
@@ -41,7 +57,11 @@ internal static class Program
             composition.AuditRepository,
             composition.DebtRepository,
             new NormalStrategy());
+
+        // Attach authenticated user session
         controller.SetCurrentUser(login.AuthenticatedUser);
+
+        // Start main application window
         Application.Run(new MainForm(controller, composition.Theme));
     }
 }
