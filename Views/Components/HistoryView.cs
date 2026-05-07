@@ -6,8 +6,9 @@ using Masroofy.App.Services;
 namespace Masroofy.App.Views.Components;
 
 /// <summary>
-/// Displays and manages the full transaction history of the system.
-/// Supports filtering, deletion, editing (manager mode), and full reset.
+/// Represents the transaction history screen in the Masroofy application.
+/// Provides full access to viewing, filtering, editing, and deleting expenses.
+/// Supports a restricted "Manager Mode" for advanced operations.
 /// </summary>
 public sealed class HistoryView : UserControl
 {
@@ -39,6 +40,10 @@ public sealed class HistoryView : UserControl
 
     private bool _managerMode;
 
+    /// <summary>
+    /// Initializes a new instance of the HistoryView class.
+    /// Sets up UI components, grid configuration, and event bindings.
+    /// </summary>
     public HistoryView(AppController controller, DashboardView dashboard)
     {
         _controller = controller;
@@ -111,7 +116,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Styles action buttons used in manager mode (edit/delete/clear).
+    /// Applies styling to action buttons (Edit/Delete/Clear All).
     /// </summary>
     private void StyleActionButton(Button btn, Color backColor)
     {
@@ -126,7 +131,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Configures DataGridView structure and styling.
+    /// Configures DataGridView columns, styles, and visual appearance.
     /// </summary>
     private void ConfigureGrid()
     {
@@ -160,7 +165,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Reloads history data based on selected category filter.
+    /// Reloads all expense records based on the selected category filter.
     /// </summary>
     public void Reload()
     {
@@ -182,7 +187,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Synchronizes category filter with system categories.
+    /// Synchronizes filter dropdown with system categories.
     /// </summary>
     public void SyncFilterCategories()
     {
@@ -196,7 +201,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Enables or disables manager mode actions.
+    /// Enables or disables manager mode features (edit/delete/clear all).
     /// </summary>
     public void SetManagerMode(bool enabled)
     {
@@ -208,7 +213,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Permanently clears all history (requires manager mode).
+    /// Clears all expense history permanently (requires manager mode).
     /// </summary>
     private void ClearAllHistory()
     {
@@ -229,7 +234,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Deletes selected transaction from history.
+    /// Deletes the currently selected transaction.
     /// </summary>
     private void DeleteSelected()
     {
@@ -246,7 +251,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Retrieves currently selected expense from the grid.
+    /// Retrieves the selected expense object from the DataGridView.
     /// </summary>
     private Expense? GetSelectedExpense()
     {
@@ -267,7 +272,7 @@ public sealed class HistoryView : UserControl
     }
 
     /// <summary>
-    /// Builds the top filter/action bar.
+    /// Builds the top filter and action bar UI.
     /// </summary>
     private Control BuildTopBar()
     {
