@@ -4,13 +4,6 @@ using Masroofy.App.Assets;
 
 namespace Masroofy.App.Views.Components;
 
-/// <summary>
-/// Represents the application settings screen.
-/// Provides functionality for:
-/// - Updating security PIN
-/// - Changing admin password
-/// - Unlocking manager mode
-/// </summary>
 public sealed class SettingsView : UserControl
 {
     private readonly AppController _controller;
@@ -18,9 +11,6 @@ public sealed class SettingsView : UserControl
     private readonly Form _hostForm;
     private readonly Action<bool> _onManagerModeChanged;
 
-    /// <summary>
-    /// Initializes SettingsView and injects dependencies.
-    /// </summary>
     public SettingsView(AppController controller, ThemeManager themeService, Form hostForm, Action<bool> managerModeChanged)
     {
         _controller = controller;
@@ -30,31 +20,28 @@ public sealed class SettingsView : UserControl
 
         Dock = DockStyle.Fill;
         BackColor = ColorPalette.DarkBackground;
-        AutoScroll = true;
+        AutoScroll = true; // لضمان ظهور العناصر لو الشاشة صغرت
 
         InitializeResponsiveLayout();
     }
 
-    /// <summary>
-    /// Builds the full responsive settings UI layout.
-    /// Contains security, admin, and manager mode sections.
-    /// </summary>
     private void InitializeResponsiveLayout()
     {
         this.Controls.Clear();
 
+        // الحاوية الرئيسية مرنة جداً
         var mainLayout = new TableLayoutPanel
         {
-            Dock = DockStyle.Top,
+            Dock = DockStyle.Top, // تلتصق بالأعلى وتتمدد
             ColumnCount = 1,
             RowCount = 4,
             AutoSize = true,
             Padding = new Padding(50),
             BackColor = Color.Transparent
         };
-
         mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
+        // 1. العنوان الرئيسي
         var lblHeader = new Label
         {
             Text = "APPLICATION SETTINGS",
@@ -64,36 +51,28 @@ public sealed class SettingsView : UserControl
             Margin = new Padding(0, 0, 0, 40)
         };
 
+        // 2. كارت تغيير الـ PIN
         var txtNewPin = CreateLargeTextBox("Enter New 4-Digit PIN");
         var btnChangePin = CreateLargeButton("UPDATE SECURITY PIN", Color.FromArgb(0, 122, 204));
         btnChangePin.Click += (_, _) => HandlePinChange(txtNewPin);
 
-        var pinCard = CreateSettingsGroup(
-            "SECURITY & PRIVACY",
-            "Change your primary access code for the application.",
-            txtNewPin,
-            btnChangePin);
+        var pinCard = CreateSettingsGroup("SECURITY & PRIVACY", "Change your primary access code for the application.", txtNewPin, btnChangePin);
 
+        // 3. كارت تحديث كلمة مرور Admin
         var txtAdminPass = CreateLargeTextBox("Enter New Admin Password");
         var btnAdminPass = CreateLargeButton("UPDATE ADMIN PASSWORD", ColorPalette.WarningOrange);
         btnAdminPass.Click += (_, _) => HandleAdminPasswordChange(txtAdminPass);
 
-        var adminPassCard = CreateSettingsGroup(
-            "ADMIN CREDENTIALS",
-            "Update the administrator password for manager panel access.",
-            txtAdminPass,
-            btnAdminPass);
+        var adminPassCard = CreateSettingsGroup("ADMIN CREDENTIALS", "Update the administrator password for manager panel access.", txtAdminPass, btnAdminPass);
 
+        // 4. كارت الـ Manager Mode
         var txtManagerPin = CreateLargeTextBox("Enter Admin PIN to Unlock");
         var btnEnableManager = CreateLargeButton("UNLOCK MANAGER MODE", ColorPalette.AccentGreen);
         btnEnableManager.Click += (_, _) => HandleManagerUnlock(txtManagerPin);
 
-        var managerCard = CreateSettingsGroup(
-            "ADMIN PRIVILEGES",
-            "Unlock advanced editing features and system administration.",
-            txtManagerPin,
-            btnEnableManager);
+        var managerCard = CreateSettingsGroup("ADMIN PRIVILEGES", "Unlock advanced editing features and system administration.", txtManagerPin, btnEnableManager);
 
+        // إضافة الكل للحاوية
         mainLayout.Controls.Add(lblHeader);
         mainLayout.Controls.Add(pinCard);
         mainLayout.Controls.Add(adminPassCard);
@@ -102,38 +81,19 @@ public sealed class SettingsView : UserControl
         this.Controls.Add(mainLayout);
     }
 
-    /// <summary>
-    /// Creates a settings group card containing title, description, input, and action button.
-    /// </summary>
     private Panel CreateSettingsGroup(string title, string description, TextBox? input, Button action)
     {
         var groupPanel = new Panel
         {
-            Width = 1000,
+            Width = 1000, // عرض كبير ليناسب الشاشات
             Height = 180,
             Margin = new Padding(0, 0, 0, 30),
             BackColor = Color.FromArgb(30, 30, 30)
         };
-
         UiStyleService.ApplyRoundedCorners(groupPanel, 20);
 
-        var lblTitle = new Label
-        {
-            Text = title,
-            Font = new Font("Segoe UI", 16, FontStyle.Bold),
-            ForeColor = Color.White,
-            Location = new Point(30, 20),
-            AutoSize = true
-        };
-
-        var lblDesc = new Label
-        {
-            Text = description,
-            Font = new Font("Segoe UI", 11),
-            ForeColor = Color.Gray,
-            Location = new Point(30, 55),
-            AutoSize = true
-        };
+        var lblTitle = new Label { Text = title, Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, Location = new Point(30, 20), AutoSize = true };
+        var lblDesc = new Label { Text = description, Font = new Font("Segoe UI", 11), ForeColor = Color.Gray, Location = new Point(30, 55), AutoSize = true };
 
         var controlsLayout = new FlowLayoutPanel
         {
@@ -143,35 +103,25 @@ public sealed class SettingsView : UserControl
             BackColor = Color.Transparent
         };
 
-        if (input != null)
-            controlsLayout.Controls.Add(input);
-
+        if (input != null) controlsLayout.Controls.Add(input);
         controlsLayout.Controls.Add(action);
 
         groupPanel.Controls.AddRange(new Control[] { lblTitle, lblDesc, controlsLayout });
-
         return groupPanel;
     }
 
-    /// <summary>
-    /// Creates a large styled textbox used for secure inputs.
-    /// </summary>
-    private TextBox CreateLargeTextBox(string placeholder)
-        => new TextBox
-        {
-            Width = 400,
-            Height = 50,
-            PasswordChar = '*',
-            PlaceholderText = placeholder,
-            Font = new Font("Segoe UI", 14F),
-            BackColor = Color.FromArgb(20, 20, 20),
-            ForeColor = Color.White,
-            BorderStyle = BorderStyle.FixedSingle
-        };
+    private TextBox CreateLargeTextBox(string placeholder) => new TextBox
+    {
+        Width = 400,
+        Height = 50,
+        PasswordChar = '*',
+        PlaceholderText = placeholder,
+        Font = new Font("Segoe UI", 14F),
+        BackColor = Color.FromArgb(20, 20, 20),
+        ForeColor = Color.White,
+        BorderStyle = BorderStyle.FixedSingle,
+    };
 
-    /// <summary>
-    /// Creates a large styled button for settings actions.
-    /// </summary>
     private Button CreateLargeButton(string text, Color color)
     {
         var btn = new Button
@@ -186,32 +136,19 @@ public sealed class SettingsView : UserControl
             Cursor = Cursors.Hand,
             Margin = new Padding(15, 0, 0, 0)
         };
-
         btn.FlatAppearance.BorderSize = 0;
         UiStyleService.ApplyRoundedCorners(btn, 12);
-
         return btn;
     }
 
-    /// <summary>
-    /// Handles updating the security PIN after validation.
-    /// </summary>
     private void HandlePinChange(TextBox txt)
     {
-        if (txt.Text.Length < 4)
-        {
-            MessageBox.Show("PIN must be at least 4 digits.");
-            return;
-        }
-
+        if (txt.Text.Length < 4) { MessageBox.Show("PIN must be at least 4 digits."); return; }
         _controller.ChangePin(txt.Text);
         txt.Clear();
         MessageBox.Show("Security PIN Updated!");
     }
 
-    /// <summary>
-    /// Handles updating the admin password with validation rules.
-    /// </summary>
     private void HandleAdminPasswordChange(TextBox txt)
     {
         if (string.IsNullOrWhiteSpace(txt.Text))
@@ -231,19 +168,12 @@ public sealed class SettingsView : UserControl
         MessageBox.Show("Admin password updated successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
-    /// <summary>
-    /// Verifies admin PIN and enables or disables Manager Mode.
-    /// </summary>
     private void HandleManagerUnlock(TextBox txt)
     {
         var isAuthorized = _controller.VerifyCurrentPin(txt.Text);
-
         _onManagerModeChanged(isAuthorized);
         txt.Clear();
-
-        if (isAuthorized)
-            MessageBox.Show("Manager Mode Active!");
-        else
-            MessageBox.Show("Access Denied: Wrong PIN.");
+        if (isAuthorized) MessageBox.Show("Manager Mode Active!");
+        else MessageBox.Show("Access Denied: Wrong PIN.");
     }
 }
