@@ -2,81 +2,152 @@ using Masroofy.App.Assets;
 
 namespace Masroofy.App.Services;
 
+/// <summary>
+/// Handles the application's visual themes
+/// and applies styling to all UI controls.
+/// </summary>
 public sealed class ThemeService
 {
-    // الوضع الداكن هو الافتراضي بما يتناسب مع ذوقك في التصميم
+    /// <summary>
+    /// Indicates whether dark mode is enabled.
+    /// Dark mode is the default theme.
+    /// </summary>
     public bool IsDarkMode { get; private set; } = true;
 
+    /// <summary>
+    /// Toggles the application theme
+    /// between Light and Dark mode.
+    /// </summary>
+    /// <param name="rootForm">
+    /// Main application form.
+    /// </param>
     public void ToggleTheme(Form rootForm)
     {
+        // Switch theme state
         IsDarkMode = !IsDarkMode;
+
+        // Apply updated theme
         ApplyTheme(rootForm);
     }
 
+    /// <summary>
+    /// Applies the current theme recursively
+    /// to a control and all child controls.
+    /// </summary>
+    /// <param name="control">
+    /// Target UI control.
+    /// </param>
     public void ApplyTheme(Control control)
     {
-        // تطبيق ثيم Dark Banking بشكل ثابت
-        var background = ColorPalette.DarkBackground;
-        var surface = ColorPalette.DarkSurface;
-        var text = ColorPalette.DarkText;
+        // Main theme colors
+        var background =
+            ColorPalette.DarkBackground;
 
-        // 1. الحاويات الرئيسية
+        var surface =
+            ColorPalette.DarkSurface;
+
+        var text =
+            ColorPalette.DarkText;
+
+        // ==================================================
+        // 1. Main Containers
+        // ==================================================
         if (control is Form or Panel or UserControl or TabPage)
         {
             control.BackColor = background;
         }
 
-        // 2. الأزرار وتفاعلاتها
+        // ==================================================
+        // 2. Buttons
+        // ==================================================
         else if (control is Button btn)
         {
             var navState = btn.Tag?.ToString();
-            if (string.Equals(navState, "nav-active", StringComparison.OrdinalIgnoreCase) || string.Equals(navState, "active", StringComparison.OrdinalIgnoreCase))
+
+            // Active navigation buttons
+            if (
+                string.Equals(
+                    navState,
+                    "nav-active",
+                    StringComparison.OrdinalIgnoreCase)
+
+                ||
+
+                string.Equals(
+                    navState,
+                    "active",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                btn.BackColor = ColorPalette.AccentGreen;
+                btn.BackColor =
+                    ColorPalette.AccentGreen;
+
                 btn.ForeColor = Color.White;
             }
             else
             {
+                // Default button style
                 btn.BackColor = surface;
                 btn.ForeColor = text;
-                btn.FlatAppearance.BorderColor = IsDarkMode ? Color.FromArgb(50, 50, 50) : Color.LightGray;
+
+                btn.FlatAppearance.BorderColor =
+                    IsDarkMode
+                        ? Color.FromArgb(50, 50, 50)
+                        : Color.LightGray;
             }
         }
 
-        // 3. النصوص والعناوين
+        // ==================================================
+        // 3. Labels & Text
+        // ==================================================
         else if (control is Label lbl)
         {
-            // استثناء الملصقات التي تحمل تلويناً خاصاً (مثل الأخضر للمكسب أو الأحمر للخسارة)
-            if (!string.Equals(lbl.Tag?.ToString(), "status", StringComparison.OrdinalIgnoreCase))
+            // Ignore labels with custom status colors
+            if (
+                !string.Equals(
+                    lbl.Tag?.ToString(),
+                    "status",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 lbl.ForeColor = text;
             }
 
-            // جعل الخلفية شفافة لتبدو متداخلة مع الحاوية الأب
+            // Transparent background for cleaner UI
             if (lbl.Parent is not null)
             {
                 lbl.BackColor = Color.Transparent;
             }
         }
 
-        // 4. حقول الإدخال (TextBox, NumericUpDown, ComboBox)
-        else if (control is TextBox or NumericUpDown or ComboBox)
+        // ==================================================
+        // 4. Input Controls
+        // ==================================================
+        else if (
+            control is TextBox ||
+            control is NumericUpDown ||
+            control is ComboBox)
         {
             control.BackColor = surface;
             control.ForeColor = text;
 
+            // Flat ComboBox style
             if (control is ComboBox combo)
+            {
                 combo.FlatStyle = FlatStyle.Flat;
+            }
         }
 
-        // 5. أي عناصر أخرى
+        // ==================================================
+        // 5. Other Controls
+        // ==================================================
         else
         {
             control.BackColor = surface;
             control.ForeColor = text;
         }
 
-        // تطبيق التنسيق تكرارياً لضمان شمولية جميع العناصر داخل الواجهة
+        // ==================================================
+        // Apply theme recursively to child controls
+        // ==================================================
         foreach (Control child in control.Controls)
         {
             ApplyTheme(child);
