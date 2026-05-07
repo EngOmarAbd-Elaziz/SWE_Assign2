@@ -4,120 +4,92 @@ using Masroofy.App.Assets;
 namespace Masroofy.App.Services;
 
 /// <summary>
-/// خدمة مسؤولة عن تنسيق عناصر الواجهة (UI Styling)
-/// مثل الكروت، الأزرار، الخطوط، والزوايا الدائرية.
+/// Service responsible for UI styling and visual formatting.
+/// It handles cards, buttons, fonts, rounded corners, and effects.
 /// </summary>
 public static class UiStyleService
 {
     // =========================================
-    // الخطوط القياسية المستخدمة داخل التطبيق
+    // Standard application fonts
     // =========================================
 
     /// <summary>
-    /// الخط الأساسي للنصوص العادية.
+    /// Default font for body text.
     /// </summary>
     public static readonly Font BodyFont =
         new("Segoe UI", 10, FontStyle.Regular);
 
     /// <summary>
-    /// خط العناوين الفرعية.
+    /// Font for headings and sub-titles.
     /// </summary>
     public static readonly Font HeadingFont =
         new("Segoe UI", 12, FontStyle.Bold);
 
     /// <summary>
-    /// خط الأرقام الكبيرة مثل الرصيد والميزانية.
+    /// Font used for large numeric values (balance, budget, etc.).
     /// </summary>
     public static readonly Font NumberFont =
         new("Segoe UI", 22, FontStyle.Bold);
 
     /// <summary>
-    /// خط العناوين الرئيسية.
+    /// Font for main titles.
     /// </summary>
     public static readonly Font TitleFont =
         new("Segoe UI", 14, FontStyle.Bold);
 
     // =========================================
-    // إنشاء Card Panel جاهز للتصميم
+    // Card creation helper
     // =========================================
 
     /// <summary>
-    /// إنشاء Panel بشكل Card مع زوايا دائرية.
+    /// Creates a styled Panel that behaves like a UI Card.
     /// </summary>
-    /// <param name="size">حجم الكارت</param>
-    /// <returns>Panel جاهز للاستخدام</returns>
+    /// <param name="size">Card size</param>
+    /// <returns>Styled Panel</returns>
     public static Panel CreateCard(Size size)
     {
         var panel = new Panel
         {
             Size = size,
-
-            // لون الخلفية من الـ ColorPalette
             BackColor = ColorPalette.DarkSurface,
-
-            // مسافات داخلية
             Padding = new Padding(18),
-
-            // مسافات خارجية
             Margin = new Padding(0, 0, 0, 18),
-
-            // شكل الماوس الافتراضي
             Cursor = Cursors.Default
         };
 
-        // عند تغيير الحجم يتم إعادة رسم الزوايا الدائرية
         panel.SizeChanged += (s, e) =>
             ApplyRoundedCorners(panel, 14);
 
-        // تطبيق الزوايا الدائرية مباشرة
         ApplyRoundedCorners(panel, 14);
 
         return panel;
     }
 
     // =========================================
-    // تنسيق أزرار الـ Navigation
+    // Navigation button styling
     // =========================================
 
     /// <summary>
-    /// تطبيق تنسيق احترافي على أزرار القائمة الجانبية.
+    /// Applies consistent styling for navigation sidebar buttons.
     /// </summary>
     public static void StyleNavButton(Button button)
     {
-        // شكل الزر Flat
         button.FlatStyle = FlatStyle.Flat;
-
-        // إزالة الحدود
         button.FlatAppearance.BorderSize = 0;
 
-        // لون الضغط
         button.FlatAppearance.MouseDownBackColor =
             Color.FromArgb(40, 40, 40);
 
-        // لون الـ Hover
         button.FlatAppearance.MouseOverBackColor =
             Color.FromArgb(50, 50, 50);
 
-        // محاذاة النص لليسار
         button.TextAlign = ContentAlignment.MiddleLeft;
-
-        // Padding داخلي
         button.Padding = new Padding(18, 0, 0, 0);
-
-        // الخط المستخدم
         button.Font = HeadingFont;
-
-        // لون النص الأساسي
         button.ForeColor = Color.DarkGray;
-
-        // شكل الماوس
         button.Cursor = Cursors.Hand;
 
-        // =====================================
-        // تأثير Hover
-        // =====================================
-
-        // عند مرور الماوس يتحول النص للأبيض
+        // Hover effects
         button.MouseEnter += (s, e) =>
         {
             if (button.Tag?.ToString() != "active")
@@ -126,7 +98,6 @@ public static class UiStyleService
             }
         };
 
-        // عند خروج الماوس يعود اللون الرمادي
         button.MouseLeave += (s, e) =>
         {
             if (button.Tag?.ToString() != "active")
@@ -137,131 +108,90 @@ public static class UiStyleService
     }
 
     // =========================================
-    // تطبيق زوايا دائرية على أي Control
+    // Rounded corners utility
     // =========================================
 
     /// <summary>
-    /// تطبيق Rounded Corners على عنصر معين.
+    /// Applies rounded corners to any control.
     /// </summary>
-    /// <param name="control">العنصر المطلوب</param>
-    /// <param name="radius">نصف قطر الزاوية</param>
+    /// <param name="control">Target control</param>
+    /// <param name="radius">Corner radius</param>
     public static void ApplyRoundedCorners(Control control, int radius)
     {
-        // التأكد أن الكنترول جاهز للرسم
         if (control.Width <= 0 || control.Height <= 0)
         {
-            // انتظار إنشاء الـ Handle
             control.HandleCreated += (s, e) =>
                 ApplyRoundedCorners(control, radius);
 
             return;
         }
 
-        // إنشاء مسار رسم للزوايا الدائرية
         using var path = new GraphicsPath();
 
-        // مستطيل بحجم الكنترول
-        var rect = new Rectangle(
-            0,
-            0,
-            control.Width,
-            control.Height);
-
-        // قطر القوس
+        var rect = new Rectangle(0, 0, control.Width, control.Height);
         var d = radius * 2;
 
-        // منع القطر من تجاوز الأبعاد
-        if (d > rect.Width)
-        {
-            d = rect.Width;
-        }
-
-        if (d > rect.Height)
-        {
-            d = rect.Height;
-        }
-
-        // =====================================
-        // رسم الأقواس الأربع
-        // =====================================
+        if (d > rect.Width) d = rect.Width;
+        if (d > rect.Height) d = rect.Height;
 
         path.StartFigure();
 
-        // أعلى يسار
         path.AddArc(rect.X, rect.Y, d, d, 180, 90);
-
-        // أعلى يمين
         path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
-
-        // أسفل يمين
         path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
-
-        // أسفل يسار
         path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
 
         path.CloseFigure();
 
-        // تطبيق الشكل على الكنترول
         control.Region = new Region(path);
     }
 
     // =========================================
-    // تأثير Glow
+    // Glow effect utility
     // =========================================
 
     /// <summary>
-    /// إضافة تأثير Glow حول العنصر.
+    /// Applies a glow effect around a control (basic implementation).
     /// </summary>
-    /// <param name="control">العنصر</param>
-    /// <param name="glowColor">لون الإضاءة</param>
+    /// <param name="control">Target control</param>
+    /// <param name="glowColor">Glow color</param>
     public static void ApplyGlowEffect(
         Control control,
         Color glowColor)
     {
-        // حدث الرسم
         control.Paint += (s, e) =>
         {
-            using var pen = new Pen(glowColor, 2);
+            using var pen = new Pen(glowColor, 2)
+            {
+                Alignment = PenAlignment.Inset
+            };
 
-            // رسم الإطار للداخل
-            pen.Alignment = PenAlignment.Inset;
-
-            // تنعيم الحواف
             e.Graphics.SmoothingMode =
                 SmoothingMode.AntiAlias;
 
-            // يمكن تطوير رسم Glow كامل لاحقاً
-            // e.Graphics.DrawPath(pen, path);
+            // Placeholder for advanced glow rendering
         };
     }
 
     // =========================================
-    // إنشاء خط Separator
+    // Separator line creation
     // =========================================
 
     /// <summary>
-    /// إنشاء خط فاصل بين العناصر.
+    /// Creates a horizontal separator line.
     /// </summary>
-    /// <param name="width">عرض الخط</param>
-    /// <returns>Control يمثل Separator</returns>
+    /// <param name="width">Line width</param>
+    /// <returns>Separator control</returns>
     public static Control CreateSeparator(int width)
     {
         return new Label
         {
             Width = width,
-
             Height = 2,
-
             BorderStyle = BorderStyle.None,
-
-            // لون رمادي هادئ
             BackColor = Color.FromArgb(50, 50, 50),
-
             AutoSize = false,
-
             Text = "",
-
-            // مسافات أعلى وأسفل
             Margin = new Padding(0, 15, 0, 15)
         };
     }
