@@ -10,6 +10,12 @@ using SkiaSharp;
 
 namespace Masroofy.App.Views.Components;
 
+/// <summary>
+/// A UserControl that serves as the main dashboard, organized into two tabs:
+/// a Quick Add Expense tab for recording transactions with a live recent activity and
+/// spending breakdown sidebar, and a Dashboard Overview tab showing key financial stats,
+/// a weekly spending trend chart, and budget health indicators.
+/// </summary>
 public sealed class DashboardView : UserControl
 {
     private readonly AppController _controller;
@@ -55,13 +61,21 @@ public sealed class DashboardView : UserControl
         Cursor = Cursors.Hand
     };
 
-    // الهياكل اللي هتشيل الهيستوري والتحليل
+    
     private Panel? _historyHost;
     private Panel? _breakdownHost;
 
     private readonly CartesianChart _weeklyTrendChart = new() { Dock = DockStyle.Fill };
     private TabControl? _pageTabControl;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="DashboardView"/>, builds both tab pages,
+    /// sets up the weekly trend chart with empty initial data, and performs the first
+    /// category and data refresh.
+    /// </summary>
+    /// <param name="controller">The application controller used to query and mutate budget data.</param>
+    /// <param name="theme">The theme manager used to activate warning mode when the balance is critically low.</param>
+    /// <param name="parent">The host form, used as the target for warning mode theme changes.</param>
     public DashboardView(AppController controller, ThemeManager theme, Form parent)
     {
         _controller = controller;
@@ -98,22 +112,28 @@ public sealed class DashboardView : UserControl
         RefreshData();
     }
 
+    /// <summary>
+    /// Builds the Quick Add Expense tab with a two-column layout. The left column contains
+    /// the amount input, category selector, and confirm button. The right column shows the
+    /// three most recent expenses and a top-three spending breakdown by category.
+    /// </summary>
+    /// <param name="tab">The tab page to populate with the quick add layout.</param>
     private void CreateQuickAddExpensePage(TabPage tab)
     {
-        // 1. تعديل الـ Layout الرئيسي ليكون عمودين (نصين) بدل عمود واحد
+
         var pageLayout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2, // عمودين: شمال للإدخال - يمين للبيانات
-            RowCount = 2,    // صفين: واحد للهيدر وواحد للمحتوى
+            ColumnCount = 2,
+            RowCount = 2,
             BackColor = Color.Transparent,
             Padding = new Padding(30),
             AutoSize = false
         };
-        pageLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F)); // النص الشمال
-        pageLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F)); // النص اليمين
-        pageLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120F));    // ارتفاع الهيدر
-        pageLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));     // مساحة المحتوى
+        pageLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        pageLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        pageLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120F));
+        pageLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
         // --- الهيدر (Header) يمتد على العمودين ---
         var headerPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
@@ -136,7 +156,7 @@ public sealed class DashboardView : UserControl
         headerPanel.Controls.Add(subtitle);
 
         pageLayout.Controls.Add(headerPanel, 0, 0);
-        pageLayout.SetColumnSpan(headerPanel, 2); // عشان الهيدر ياخد العرض كله
+        pageLayout.SetColumnSpan(headerPanel, 2);
 
         // ================== الجانب الأيسر: Input Section ==================
         var leftPanel = new FlowLayoutPanel
@@ -167,7 +187,7 @@ public sealed class DashboardView : UserControl
         categoryContainer.Controls.Add(_cmbCategory);
         leftPanel.Controls.Add(categoryContainer);
 
-        // Add Button (من كودك الأصلي مع ربط التحديث)
+        
         _btnQuickAdd.Text = "✅ CONFIRM TRANSACTION";
         _btnQuickAdd.Width = 480;
         _btnQuickAdd.Height = 65;
@@ -176,14 +196,14 @@ public sealed class DashboardView : UserControl
         {
             QuickAddExpense();
             UpdateSidePanels();
-            UpdateWeeklyTrend();    // التعديل الجديد: تحديث الشارت في التاب التانية
+            UpdateWeeklyTrend();   
             RefreshData();
-        }; // نحدث اليمين فوراً
+        }; 
         leftPanel.Controls.Add(_btnQuickAdd);
 
         pageLayout.Controls.Add(leftPanel, 0, 1);
 
-        // ================== الجانب الأيمن: Insights Section ==================
+        // ================== right side: Insights Section ==================
         var rightPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -206,15 +226,19 @@ public sealed class DashboardView : UserControl
 
         tab.Controls.Add(pageLayout);
 
-        UpdateSidePanels(); // تحميل البيانات عند تشغيل التاب لأول مرة
+        UpdateSidePanels();
     }
 
+    /// <summary>
+    /// Refreshes the Recent Activity and Spending Breakdown panels on the right side of the
+    /// Quick Add tab. Displays the three most recent expenses and the top three categories
+    /// by total spend. Has no effect if either host panel is null or no active cycle exists.
+    /// </summary>
     private void UpdateSidePanels()
-    {
-        // التأكد إن الحاويات مش null والبيانات موجودة
+    { 
         if (_historyHost == null || _breakdownHost == null || _controller.CurrentCycle == null) return;
 
-        // 1. تحديث الهيستوري
+        
         _historyHost.Controls.Clear();
         var lastExpenses = _controller.GetExpenses().OrderByDescending(x => x.Date).Take(3).ToList();
 
@@ -231,7 +255,7 @@ public sealed class DashboardView : UserControl
             y += 85;
         }
 
-        // 2. تحديث الـ Breakdown
+        
         _breakdownHost.Controls.Clear();
         var stats = _controller.GetExpenses().GroupBy(x => x.Category)
             .Select(g => new { Name = g.Key, Total = g.Sum(x => x.Amount) })
@@ -241,11 +265,17 @@ public sealed class DashboardView : UserControl
         foreach (var s in stats)
         {
             var lbl = new Label { Text = $"{s.Name}: {s.Total:N0} EGP", Font = new Font("Segoe UI", 13), ForeColor = Color.LightGray, Location = new Point(0, yB), AutoSize = true };
-            _breakdownHost.Controls.Add(lbl); // أو _breakdownHost.Controls.Add(lbl);
+            _breakdownHost.Controls.Add(lbl);
             yB += 45;
         }
     }
 
+    /// <summary>
+    /// Builds the Dashboard Overview tab with a scrollable layout containing a title,
+    /// a 2x2 stats grid showing balance, daily limit, remaining days, and total spent,
+    /// and a weekly spending velocity line chart.
+    /// </summary>
+    /// <param name="tab">The tab page to populate with the overview layout.</param>
     private void CreateDashboardOverviewPage(TabPage tab)
     {
         var mainContainer = new FlowLayoutPanel
@@ -329,6 +359,13 @@ public sealed class DashboardView : UserControl
         tab.Controls.Add(mainContainer);
     }
 
+    /// <summary>
+    /// Creates a styled stat card panel containing a static label for the metric name
+    /// and a dynamic value label that is updated at runtime via <see cref="RefreshData"/>.
+    /// </summary>
+    /// <param name="label">The static descriptive title shown above the value, e.g. TOTAL BALANCE.</param>
+    /// <param name="valueLabel">The dynamic label whose text is updated to reflect the current metric value.</param>
+    /// <returns>A styled <see cref="Panel"/> ready to be placed in the stats grid.</returns>
     private Panel CreateStatPanel(string label, Label valueLabel)
     {
         var panel = new Panel
@@ -358,8 +395,10 @@ public sealed class DashboardView : UserControl
         return panel;
     }
 
-    // --- تحديث الأزرار والبيانات ---
-
+    /// <summary>
+    /// Clears and repopulates the category combo box from the controller's current category list.
+    /// Disables the combo box and shows a placeholder item if no categories are available.
+    /// </summary>
     public void RefreshCategories()
     {
         _cmbCategory.Items.Clear();
@@ -384,8 +423,17 @@ public sealed class DashboardView : UserControl
         }
     }
 
+    /// <summary>
+    /// Synchronizes the category combo box by delegating to <see cref="RefreshCategories"/>.
+    /// Called by the admin panel after category additions or deletions.
+    /// </summary>
     public void SyncCategories() => RefreshCategories();
 
+    /// <summary>
+    /// Refreshes all dashboard stat labels, the daily limit color indicator, the forecast label,
+    /// the weekly trend chart, and the side panels. Resets all values to zero placeholders if
+    /// no active cycle exists. Also triggers the warning system check.
+    /// </summary>
     public void RefreshData()
     {
         if (_controller.CurrentCycle == null)
@@ -422,6 +470,11 @@ public sealed class DashboardView : UserControl
         UpdateSidePanels();
     }
 
+    /// <summary>
+    /// Validates the current input fields and submits a new expense via the controller.
+    /// Shows validation message boxes if no active cycle exists, no category is selected,
+    /// or the amount is zero. Resets the amount field to zero on success.
+    /// </summary>
     private void QuickAddExpense()
     {
         if (_controller.CurrentCycle == null)
@@ -447,6 +500,12 @@ public sealed class DashboardView : UserControl
         RefreshData();
     }
 
+    /// <summary>
+    /// Rebuilds the weekly trend line chart using the last 7 days of expense data from the
+    /// active cycle. Each day is represented by its abbreviated name on the X axis and its
+    /// total spending on the Y axis. Shows all-zero values if no active cycle exists.
+    /// Forces an immediate chart redraw after updating the series.
+    /// </summary>
     private void UpdateWeeklyTrend()
     {
         var recentExpenses = _controller.CurrentCycle == null
@@ -502,6 +561,11 @@ public sealed class DashboardView : UserControl
         _weeklyTrendChart.Invalidate();
     }
 
+    /// <summary>
+    /// Initializes the weekly trend chart with a flat zero-value line across the last 7 days,
+    /// ensuring the chart renders correctly before any expense data is loaded.
+    /// Forces an immediate chart draw after configuration.
+    /// </summary>
     private void InitializeWeeklyTrendChart()
     {
         // Initialize with empty 7-day data
@@ -554,6 +618,12 @@ public sealed class DashboardView : UserControl
         _weeklyTrendChart.Invalidate();
     }
 
+    /// <summary>
+    /// Checks whether the current remaining balance has fallen to or below 20% of the total
+    /// cycle allowance. Activates warning mode on the host form and turns the forecast label
+    /// red if the threshold is breached; deactivates warning mode and restores the label color
+    /// otherwise. Has no effect if no active cycle exists.
+    /// </summary>
     private void UpdateWarningSystem()
     {
         if (_controller.CurrentCycle == null) return;
