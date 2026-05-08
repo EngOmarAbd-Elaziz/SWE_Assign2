@@ -5,15 +5,20 @@ using Masroofy.App.Views.Components;
 
 namespace Masroofy.App.Views.Forms;
 
+/// <summary>
+/// The application's main window, rendered as a borderless maximized form. Hosts a fixed
+/// left sidebar for navigation and a content panel that swaps between all major views:
+/// Dashboard, History, Debt Tracker, Analytics, Tutorial, Manager Panel, and Settings.
+/// Supports keyboard shortcuts for navigation and theme toggling, and enforces manager
+/// mode access control on the Admin Panel.
+/// </summary>
 public sealed class MainForm : Form
 {
-
     private readonly AppController _controller;
     private readonly ThemeManager _themeService;
     private readonly List<Button> _navButtons = [];
     private readonly Panel _panelContent = new() { Dock = DockStyle.Fill, Name = "PanelContent" };
 
-    // تعريف الصفحات (Views)
     private readonly DashboardView _dashboardView;
     private readonly HistoryView _historyView;
     private readonly DebtTrackerView _debtView;
@@ -25,33 +30,33 @@ public sealed class MainForm : Form
     private bool _managerModeEnabled;
     private Button? _btnDashboard, _btnHistory, _btnDebt, _btnAnalytics, _btnTutorial, _btnAdmin, _btnSettings;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="MainForm"/>, constructs all views in
+    /// dependency order, builds the sidebar, wires keyboard shortcuts, shows the dashboard
+    /// as the default view, and applies the current theme.
+    /// </summary>
+    /// <param name="controller">The application controller shared across all views.</param>
+    /// <param name="themeService">The theme manager used to apply and toggle the visual theme.</param>
     public MainForm(AppController controller, ThemeManager themeService)
     {
-
-
         _controller = controller;
         _themeService = themeService;
 
-        // تهيئة الصفحات مع تمرير المراجع اللازمة
-        // 1. أنشئ الـ Dashboard أولاً
         _dashboardView = new DashboardView(_controller, _themeService, this);
-        // 2. مرر الـ dashboard لباقي الصفحات
         _historyView = new HistoryView(_controller, _dashboardView);
         _debtView = new DebtTrackerView(_controller, _dashboardView);
         _adminView = new AdminPanelView(_controller, _dashboardView);
         _analyticsView = new AnalyticsView(controller, _dashboardView);
         _tutorialView = new TutorialView(controller, _dashboardView);
-        // حذفنا _dashboardView من النص لأن الكنترولر بيقوم بالواجب
         _settingsView = new SettingsView(controller, themeService, this, enabled =>
         {
             _managerModeEnabled = enabled;
-            _historyView.SetManagerMode(enabled); // تفعيل التعديل/الحذف في الهيستوري تلقائياً
+            _historyView.SetManagerMode(enabled);
         });
 
-        // إعدادات النافذة الرئيسية
         FormBorderStyle = FormBorderStyle.None;
         WindowState = FormWindowState.Maximized;
-        KeyPreview = true; // ضروري لتفعيل اختصارات الكيبورد
+        KeyPreview = true;
         Text = $"Masroofy Omni-Edition - {controller.CurrentUserName}";
         KeyDown += MainForm_KeyDown;
 
@@ -59,20 +64,25 @@ public sealed class MainForm : Form
         Controls.Add(_panelContent);
         Controls.Add(sidebar);
 
-        // تشغيل الصفحة الرئيسية افتراضياً
         ShowView(_dashboardView);
         if (_btnDashboard != null) SetActiveNav(_btnDashboard);
 
         _themeService.ApplyTheme(this);
     }
 
+    /// <summary>
+    /// Builds the left navigation sidebar containing the brand label, all navigation buttons,
+    /// and an Exit button docked to the bottom. Wires each button to its corresponding view,
+    /// with the Manager Panel button guarded by a manager mode check.
+    /// </summary>
+    /// <returns>A <see cref="Panel"/> representing the fully constructed sidebar.</returns>
     private Control BuildSidebar()
     {
         var sidebar = new Panel { Dock = DockStyle.Left, Width = 260, BackColor = ColorPalette.DarkSurface };
 
         var lblBrand = new Label
         {
-            Text = "Masroofy", // اسم البراند الخاص بك
+            Text = "Masroofy",
             Dock = DockStyle.Top,
             Height = 80,
             TextAlign = ContentAlignment.MiddleCenter,
@@ -80,7 +90,6 @@ public sealed class MainForm : Form
             ForeColor = ColorPalette.AccentGreen
         };
 
-        // إنشاء الأزرار
         _btnDashboard = CreateNavBtn("Dashboard", 1);
         _btnHistory = CreateNavBtn("History", 2);
         _btnDebt = CreateNavBtn("Debt Tracker", 3);
@@ -93,7 +102,6 @@ public sealed class MainForm : Form
         UiStyleService.StyleNavButton(btnExit);
         btnExit.Click += (_, _) => Application.Exit();
 
-        // ربط الأحداث (Events)
         _btnDashboard.Click += (_, _) => { SetActiveNav(_btnDashboard); ShowView(_dashboardView); };
         _btnHistory.Click += (_, _) => { SetActiveNav(_btnHistory); ShowView(_historyView); };
         _btnDebt.Click += (_, _) => { SetActiveNav(_btnDebt); ShowView(_debtView); };
@@ -117,11 +125,18 @@ public sealed class MainForm : Form
         return sidebar;
     }
 
+    /// <summary>
+    /// Creates a styled navigation button with left-aligned text, hover background transitions,
+    /// and a hand cursor. The button is docked to the top of the sidebar.
+    /// </summary>
+    /// <param name="text">The display label for the navigation button.</param>
+    /// <param name="index">The position index of the button, reserved for future icon mapping.</param>
+    /// <returns>A fully styled navigation <see cref="Button"/>.</returns>
     private Button CreateNavBtn(string text, int index)
     {
         var btn = new Button
         {
-            Text = $"  {text}", // مسافة بسيطة لترك مجال للأيقونات مستقبلاً
+            Text = $"  {text}",
             Dock = DockStyle.Top,
             Height = 55,
             TextAlign = ContentAlignment.MiddleLeft,
@@ -142,16 +157,21 @@ public sealed class MainForm : Form
         return btn;
     }
 
+    /// <summary>
+    /// Displays the given view in the content panel, replacing any previously shown control.
+    /// Triggers a data refresh appropriate to the view type immediately after it is shown,
+    /// then reapplies the current theme to the entire form.
+    /// </summary>
+    /// <param name="view">The view control to display in the content panel.</param>
     private void ShowView(Control view)
     {
         if (!_panelContent.Controls.Contains(view))
         {
             _panelContent.Controls.Clear();
-            view.Dock = DockStyle.Fill; // هذا السطر هو الأهم لاستغلال كامل المساحة
+            view.Dock = DockStyle.Fill;
             _panelContent.Controls.Add(view);
         }
 
-        // تحديث البيانات في الصفحة المختارة فور ظهورها
         if (view is DashboardView dash) dash.RefreshCategories();
         else if (view is HistoryView history) history.Reload();
         else if (view is AnalyticsView analytics) analytics.Reload();
@@ -161,6 +181,12 @@ public sealed class MainForm : Form
         _themeService.ApplyTheme(this);
     }
 
+    /// <summary>
+    /// Marks the given button as the active navigation item by setting its tag, background,
+    /// and foreground to the active accent style, and resets all other navigation buttons
+    /// to their default inactive appearance.
+    /// </summary>
+    /// <param name="active">The navigation button to mark as active.</param>
     private void SetActiveNav(Button active)
     {
         foreach (var btn in _navButtons)
@@ -175,9 +201,13 @@ public sealed class MainForm : Form
         active.ForeColor = Color.White;
     }
 
+    /// <summary>
+    /// Handles keyboard shortcuts for the main form. Ctrl+1 through Ctrl+6 simulate clicks
+    /// on the corresponding navigation buttons. Ctrl+T toggles the application theme.
+    /// Escape prompts the user to confirm before closing the application.
+    /// </summary>
     private void MainForm_KeyDown(object? sender, KeyEventArgs e)
     {
-        // التعامل مع الاختصارات Ctrl + Number
         if (e.Control)
         {
             switch (e.KeyCode)
