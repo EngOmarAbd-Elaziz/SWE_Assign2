@@ -5,6 +5,11 @@ using Masroofy.App.Services;
 
 namespace Masroofy.App.Views.Components;
 
+/// <summary>
+/// A UserControl that provides a full debt tracking interface, allowing the user to log,
+/// edit, and delete borrowing and lending records, with an optional toggle to apply
+/// borrowed amounts directly to the active budget cycle balance.
+/// </summary>
 public sealed class DebtTrackerView : UserControl
 {
     private readonly AppController _controller;
@@ -47,6 +52,13 @@ public sealed class DebtTrackerView : UserControl
     private readonly CheckBox _chkApply = new() { Text = "Apply to Balance", AutoSize = true, ForeColor = Color.LightGray };
     private DebtRecord? _selected;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="DebtTrackerView"/>, builds the full layout
+    /// including the input fields, action buttons, and debt grid, then loads existing debt
+    /// records from the controller.
+    /// </summary>
+    /// <param name="controller">The application controller used to query and mutate debt records.</param>
+    /// <param name="dashboard">The dashboard view refreshed after any add, edit, or delete operation.</param>
     public DebtTrackerView(AppController controller, DashboardView dashboard)
     {
         _controller = controller;
@@ -185,6 +197,13 @@ public sealed class DebtTrackerView : UserControl
         LoadDebts();
     }
 
+    /// <summary>
+    /// Creates a styled action button with rounded corners, flat appearance, white text,
+    /// and a hand cursor, using the specified label and background color.
+    /// </summary>
+    /// <param name="text">The button label text.</param>
+    /// <param name="backColor">The background color of the button.</param>
+    /// <returns>A fully styled <see cref="Button"/> ready to be added to a container.</returns>
     private Button CreateActionButton(string text, Color backColor)
     {
         var btn = new Button
@@ -203,6 +222,11 @@ public sealed class DebtTrackerView : UserControl
         return btn;
     }
 
+    /// <summary>
+    /// Configures the debt grid columns, hiding the Id column and setting explicit widths
+    /// for Type, Amount, and Date. The Note column fills remaining available space.
+    /// Binds the selection changed event to populate input fields with the selected row's data.
+    /// </summary>
     private void SetupGrid()
     {
         _grid.Columns.Clear();
@@ -220,6 +244,10 @@ public sealed class DebtTrackerView : UserControl
         _grid.SelectionChanged += (_, _) => BindSelected();
     }
 
+    /// <summary>
+    /// Clears and repopulates the debt grid with all debt records for the current user,
+    /// formatting each row with left-aligned cell content.
+    /// </summary>
     public void LoadDebts()
     {
         _grid.Rows.Clear();
@@ -230,6 +258,13 @@ public sealed class DebtTrackerView : UserControl
         }
     }
 
+    /// <summary>
+    /// Creates a large styled button with the specified label and background color,
+    /// using bold font and flat appearance with vertical margin spacing.
+    /// </summary>
+    /// <param name="text">The button label text.</param>
+    /// <param name="color">The background color of the button.</param>
+    /// <returns>A <see cref="Button"/> sized at 180x65 with standard debt tracker styling.</returns>
     private Button CreateLargeBtn(string text, Color color) => new Button
     {
         Text = text,
@@ -240,6 +275,12 @@ public sealed class DebtTrackerView : UserControl
         Font = new Font("Segoe UI", 12, FontStyle.Bold),
         Margin = new Padding(0, 10, 0, 10)
     };
+
+    /// <summary>
+    /// Populates the input fields with the data from the currently selected grid row,
+    /// storing the corresponding <see cref="DebtRecord"/> in <c>_selected</c> for use
+    /// by edit and delete operations. Has no effect if no row is selected.
+    /// </summary>
     private void BindSelected()
     {
         if (_grid.CurrentRow == null) return;
@@ -252,6 +293,12 @@ public sealed class DebtTrackerView : UserControl
         _txtNote.Text = _selected.Note;
     }
 
+    /// <summary>
+    /// Validates the current input and submits a new debt record via the controller.
+    /// If the Apply to Balance checkbox is checked and the type is Borrowing, the amount
+    /// is also credited to the active cycle balance. Refreshes the dashboard and grid on success.
+    /// Has no effect if the amount is zero.
+    /// </summary>
     private void AddDebt()
     {
         if (_numAmount.Value <= 0) return;
@@ -262,6 +309,11 @@ public sealed class DebtTrackerView : UserControl
         LoadDebts();
     }
 
+    /// <summary>
+    /// Updates the currently selected debt record with the values in the input fields
+    /// via the controller, then refreshes the dashboard and reloads the grid.
+    /// Has no effect if no record is selected or the amount is zero.
+    /// </summary>
     private void EditDebt()
     {
         if (_selected == null || _numAmount.Value <= 0) return;
@@ -270,6 +322,11 @@ public sealed class DebtTrackerView : UserControl
         LoadDebts();
     }
 
+    /// <summary>
+    /// Prompts the user for confirmation, then deletes the currently selected debt record
+    /// via the controller. Refreshes the dashboard and reloads the grid on confirmation.
+    /// Has no effect if no record is selected or the user cancels the dialog.
+    /// </summary>
     private void DeleteDebt()
     {
         if (_selected == null) return;
@@ -282,6 +339,10 @@ public sealed class DebtTrackerView : UserControl
         }
     }
 
+    /// <summary>
+    /// Clears all input fields, resets the amount to zero, unchecks the Apply to Balance
+    /// checkbox, and clears the currently selected debt record.
+    /// </summary>
     private void ResetInputs()
     {
         _txtNote.Clear();
