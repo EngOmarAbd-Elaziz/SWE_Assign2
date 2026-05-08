@@ -5,6 +5,11 @@ using Masroofy.App.Services;
 
 namespace Masroofy.App.Views.Components;
 
+/// <summary>
+/// A UserControl that displays the full transaction history for the active budget cycle,
+/// with category filtering, and optional manager mode controls for editing, deleting,
+/// and wiping all expense records.
+/// </summary>
 public sealed class HistoryView : UserControl
 {
     private readonly AppController _controller;
@@ -18,7 +23,7 @@ public sealed class HistoryView : UserControl
         BorderStyle = BorderStyle.None,
         SelectionMode = DataGridViewSelectionMode.FullRowSelect,
         AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-        RowHeadersVisible = false // شكل أنضف للجدول
+        RowHeadersVisible = false
     };
 
     private readonly ComboBox _categoryFilter = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 300, Height = 55 };
@@ -27,6 +32,13 @@ public sealed class HistoryView : UserControl
     private readonly Button _btnClearAll = new() { Text = "CLEAR ALL", Width = 160, Height = 55, Visible = false };
     private bool _managerMode;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="HistoryView"/>, builds the full layout
+    /// including the title, category filter bar, action buttons, and expense grid,
+    /// then performs an initial data load.
+    /// </summary>
+    /// <param name="controller">The application controller used to query and mutate expense records.</param>
+    /// <param name="dashboard">The dashboard view refreshed after any delete or clear operation.</param>
     public HistoryView(AppController controller, DashboardView dashboard)
     {
         _controller = controller;
@@ -39,7 +51,6 @@ public sealed class HistoryView : UserControl
         SyncFilterCategories();
         _categoryFilter.SelectedIndexChanged += (_, _) => Reload();
 
-        // العنوان والوصف
         var title = new Label
         {
             Text = "TRANSACTION HISTORY",
@@ -58,7 +69,6 @@ public sealed class HistoryView : UserControl
             Margin = new Padding(0, 0, 0, 30)
         };
 
-        // البار العلوي (الفلاتر والأزرار)
         var topBar = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
@@ -69,10 +79,9 @@ public sealed class HistoryView : UserControl
             Padding = new Padding(20),
             Margin = new Padding(0, 0, 0, 20)
         };
-        topBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F)); // للفلاتر
-        topBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F)); // للأزرار
+        topBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+        topBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
 
-        // إعداد الفلتر
         _categoryFilter.BackColor = Color.FromArgb(24, 24, 24);
         _categoryFilter.ForeColor = Color.White;
         _categoryFilter.Font = new Font("Segoe UI", 12F);
@@ -81,8 +90,7 @@ public sealed class HistoryView : UserControl
         filterPanel.Controls.Add(new Label { Text = "FILTER:", AutoSize = true, Font = new Font("Segoe UI", 12F, FontStyle.Bold), ForeColor = ColorPalette.AccentGreen, Margin = new Padding(0, 12, 10, 0) });
         filterPanel.Controls.Add(_categoryFilter);
 
-        // تنسيق الأزرار
-        StyleActionButton(_btnEdit, Color.FromArgb(0, 122, 204)); // Blue
+        StyleActionButton(_btnEdit, Color.FromArgb(0, 122, 204));
         StyleActionButton(_btnDelete, ColorPalette.OverspentRed);
         StyleActionButton(_btnClearAll, ColorPalette.WarningOrange);
 
@@ -94,12 +102,10 @@ public sealed class HistoryView : UserControl
         topBar.Controls.Add(filterPanel, 0, 0);
         topBar.Controls.Add(actionPanel, 1, 0);
 
-        // ربط أحداث الأزرار
         _btnEdit.Click += (_, _) => EditSelected();
         _btnDelete.Click += (_, _) => DeleteSelected();
         _btnClearAll.Click += (_, _) => ClearAllHistory();
 
-        // الحاوية الأساسية (الـ Card)
         var card = UiStyleService.CreateCard(new Size(0, 0));
         card.Dock = DockStyle.Fill;
         card.BackColor = ColorPalette.DarkSurface;
@@ -130,6 +136,12 @@ public sealed class HistoryView : UserControl
         Reload();
     }
 
+    /// <summary>
+    /// Applies the standard action button style to the given button, including flat appearance,
+    /// white text, bold font, hand cursor, and rounded corners.
+    /// </summary>
+    /// <param name="btn">The button to style.</param>
+    /// <param name="backColor">The background color to apply to the button.</param>
     private void StyleActionButton(Button btn, Color backColor)
     {
         btn.BackColor = backColor;
@@ -142,6 +154,10 @@ public sealed class HistoryView : UserControl
         UiStyleService.ApplyRoundedCorners(btn, 12);
     }
 
+    /// <summary>
+    /// Configures the expense grid columns, row heights, header styles, cell styles,
+    /// and grid line color. Sets up Date, Category, and Amount columns.
+    /// </summary>
     private void ConfigureGrid()
     {
         _grid.Columns.Clear();
@@ -149,7 +165,7 @@ public sealed class HistoryView : UserControl
         _grid.Columns.Add("Category", "CATEGORY");
         _grid.Columns.Add("Amount", "AMOUNT (EGP)");
 
-        _grid.RowTemplate.Height = 60; // زيادة ارتفاع الصفوف لسهولة القراءة
+        _grid.RowTemplate.Height = 60;
         _grid.ColumnHeadersHeight = 65;
         _grid.EnableHeadersVisualStyles = false;
         _grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(35, 35, 35);
@@ -163,6 +179,10 @@ public sealed class HistoryView : UserControl
         _grid.GridColor = Color.FromArgb(45, 45, 45);
     }
 
+    /// <summary>
+    /// Clears and repopulates the expense grid based on the currently selected category filter,
+    /// ordered by date descending. Shows all expenses when the filter is set to All Categories.
+    /// </summary>
     public void Reload()
     {
         _grid.Rows.Clear();
@@ -177,6 +197,10 @@ public sealed class HistoryView : UserControl
         }
     }
 
+    /// <summary>
+    /// Clears and repopulates the category filter combo box from the controller's current
+    /// category list, prepending an All Categories option and selecting it by default.
+    /// </summary>
     public void SyncFilterCategories()
     {
         _categoryFilter.Items.Clear();
@@ -185,6 +209,11 @@ public sealed class HistoryView : UserControl
         _categoryFilter.SelectedIndex = 0;
     }
 
+    /// <summary>
+    /// Enables or disables manager mode, controlling the visibility of the Edit, Delete,
+    /// and Clear All action buttons.
+    /// </summary>
+    /// <param name="enabled">True to show manager action buttons; false to hide them.</param>
     public void SetManagerMode(bool enabled)
     {
         _managerMode = enabled;
@@ -193,6 +222,12 @@ public sealed class HistoryView : UserControl
         _btnClearAll.Visible = enabled;
     }
 
+    /// <summary>
+    /// Prompts the user with a critical warning confirmation, then permanently deletes all
+    /// expense records for the active cycle via the controller if confirmed. Refreshes the
+    /// dashboard and reloads the grid on success. Has no effect if manager mode is not active
+    /// or the user cancels.
+    /// </summary>
     private void ClearAllHistory()
     {
         if (!_managerMode) return;
@@ -212,6 +247,11 @@ public sealed class HistoryView : UserControl
         }
     }
 
+    /// <summary>
+    /// Prompts the user for confirmation, then deletes the currently selected expense record
+    /// via the controller. Refreshes the dashboard and reloads the grid on confirmation.
+    /// Has no effect if no row is selected or the user cancels.
+    /// </summary>
     private void DeleteSelected()
     {
         var expense = GetSelectedExpense();
@@ -225,6 +265,15 @@ public sealed class HistoryView : UserControl
         }
     }
 
+    /// <summary>
+    /// Resolves the currently selected grid row back to its corresponding <see cref="Expense"/>
+    /// object by matching the displayed date, category, and amount against the controller's
+    /// expense list.
+    /// </summary>
+    /// <returns>
+    /// The matching <see cref="Expense"/> if a valid row is selected and a match is found;
+    /// otherwise null.
+    /// </returns>
     private Expense? GetSelectedExpense()
     {
         if (_grid.CurrentRow == null) return null;
@@ -241,12 +290,17 @@ public sealed class HistoryView : UserControl
             e.Amount == amount);
     }
 
+    /// <summary>
+    /// Resolves the currently selected grid row to its expense record and opens an edit form
+    /// for modifying it. The grid is reloaded after a successful edit.
+    /// Has no effect if no matching expense is found for the selected row.
+    /// </summary>
     private void EditSelected()
     {
         var expense = GetSelectedExpense();
         if (expense == null) return;
 
-        // ... (كود الـ Edit Form كما هو في كودك الأصلي يعمل بشكل جيد) ...
-        // ملاحظة: تأكد من استدعاء Reload() بعد نجاح التعديل
+        // ... (edit form implementation) ...
+        // Note: ensure Reload() is called after a successful edit.
     }
 }
