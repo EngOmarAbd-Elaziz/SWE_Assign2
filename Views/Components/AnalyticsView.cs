@@ -9,6 +9,11 @@ using LiveChartsCore.SkiaSharpView.Painting;
 
 namespace Masroofy.App.Views.Components;
 
+/// <summary>
+/// A UserControl that renders the financial analytics dashboard, displaying spending velocity,
+/// top category breakdowns, budget health indicators, dynamic insight cards, a health progress bar,
+/// a pie chart for category distribution, and a bar chart for per-category expense totals.
+/// </summary>
 public sealed class AnalyticsView : UserControl
 {
     private readonly AppController _controller;
@@ -32,6 +37,13 @@ public sealed class AnalyticsView : UserControl
     private readonly Panel _healthBarBackground = new() { BackColor = Color.FromArgb(45, 45, 45), Height = 18, Width = 650 };
     private readonly Panel _healthBarFill = new() { BackColor = ColorPalette.SafeGreen, Width = 0, Height = 18 };
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="AnalyticsView"/>, builds the full analytics layout
+    /// including the header, dynamic side cards, summary panel, health bar, and chart containers,
+    /// then triggers an initial data load when the control is first shown.
+    /// </summary>
+    /// <param name="controller">The application controller used to retrieve cycle and expense data.</param>
+    /// <param name="dashboard">The dashboard view, retained for potential cross-view coordination.</param>
     public AnalyticsView(AppController controller, DashboardView dashboard)
     {
         _controller = controller;
@@ -113,6 +125,12 @@ public sealed class AnalyticsView : UserControl
         this.Load += (s, e) => Reload();
     }
 
+    /// <summary>
+    /// Reloads all analytics data from the controller and updates every visual element including
+    /// the velocity and health labels, dynamic side cards, insight text, health bar fill width and color,
+    /// pie chart category distribution, and bar chart per-category totals.
+    /// Falls back to default placeholder values if no active cycle or expenses are found.
+    /// </summary>
     public void Reload()
     {
         if (_controller.CurrentCycle == null)
@@ -203,6 +221,19 @@ public sealed class AnalyticsView : UserControl
         _barChart.Invalidate();
     }
 
+    /// <summary>
+    /// Updates the two dynamic side cards and the main insight label based on the current
+    /// spending analytics. The Patterns card turns orange if actual velocity exceeds planned,
+    /// or green if spending is on track. The Health Status card turns red if over 80% of the
+    /// budget is consumed, or shows remaining balance otherwise. The Insight label escalates
+    /// through green, orange, and red states depending on whether the budget is exceeded,
+    /// spending is 50% faster than planned, or all is clear.
+    /// </summary>
+    /// <param name="actual">The actual daily spending velocity in currency units per day.</param>
+    /// <param name="planned">The planned daily spending velocity derived from the cycle allowance.</param>
+    /// <param name="topCat">The name of the highest-spending category in the current cycle.</param>
+    /// <param name="health">The fraction of the total allowance already consumed, from 0.0 to 1.0+.</param>
+    /// <param name="catCount">The total number of distinct spending categories present in the cycle.</param>
     private void UpdateDynamicAnalytics(double actual, double planned, string topCat, double health, int catCount)
     {
         // 1. تحديث كارت الـ Patterns
@@ -247,6 +278,10 @@ public sealed class AnalyticsView : UserControl
         }
     }
 
+    /// <summary>
+    /// Resets all analytics labels, side cards, health bar, and charts back to their default
+    /// placeholder state. Called when no active cycle exists or the cycle has no recorded expenses.
+    /// </summary>
     private void ResetToDefault()
     {
         _lblVelocity.Text = "Velocity: $0.00/day";
@@ -265,6 +300,13 @@ public sealed class AnalyticsView : UserControl
         _pieChart.Series = Array.Empty<ISeries>();
     }
 
+    /// <summary>
+    /// Creates a styled dark surface card panel with a bold title label and a dynamic content label
+    /// that can be updated at runtime to reflect live analytics data.
+    /// </summary>
+    /// <param name="title">The static heading text displayed at the top of the card.</param>
+    /// <param name="contentLabel">The dynamic label placed inside the card whose text and color are updated by analytics logic.</param>
+    /// <returns>A styled <see cref="Panel"/> containing the title and content label, ready to be added to a container.</returns>
     private Control CreateDynamicCard(string title, Label contentLabel)
     {
         var card = new Panel { Width = 280, Height = 110, BackColor = ColorPalette.DarkSurface, Margin = new Padding(0, 0, 0, 10), Padding = new Padding(15) };
