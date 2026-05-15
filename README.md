@@ -217,7 +217,7 @@ Responsive desktop layout
 
 ## 📦 Release
 
-👉 Latest Version: https://github.com/your-username/masroofy/releases
+👉 Latest Version: [CLICK HERE TO DOWNLOAD](https://github.com/EngOmarAbd-Elaziz/SWE_Assign2/releases/tag/v1.2)
 
 > Download → Extract → Run → Start Controlling Your Finances 💰
 
